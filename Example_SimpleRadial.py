@@ -2,10 +2,10 @@ from numpy import *
 from matplotlib.pyplot import *
 from mrtrajgen import *
 
-sizIm = 16
+sizImg = 16
 
 # generate trajectory of radial
-trjRadial = genRadial(linspace(0, 2*pi, int64(sizIm*pi/1)), linspace(0, 0.5, sizIm//2)) # derive trajectory
+trjRadial = genRadial(linspace(0, 2*pi, int64(sizImg*pi/1)), linspace(0, 0.5, sizImg//2)) # derive trajectory
 
 # show trajectories
 figure()

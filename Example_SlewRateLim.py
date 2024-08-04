@@ -4,23 +4,23 @@ from mrtrajgen import *
 
 # parameter definition
 gamma = 42.58e6
-sizIm = 128
+sizImg = 128
 sizPix = 1e-3
 dt = 10e-6
 sr = 640 # slew rate in T/m/s
 turbo = 48
 rhoMax = 0.5
-srLim = getSlewRateCircle(1/sizIm, dt, rhoMax) # use slew rate at the boundary of kspace as slew rate limit
+srLim = getSlewRateCircle(1/sizImg, dt, rhoMax) # use slew rate at the boundary of kspace as slew rate limit
 print(f"srLim={srLim}")
 
 # generate trajectory of spiral
 rho1 = gamma*(srLim*dt)*dt/2 # rho of first point
-getDeltaK = lambda rho, tht: rho1 if rho == 0 else min(sqrt(srLim*gamma*rho*(dt)**2), 1/sizIm) # function of sampling interval, with respect to rho and theta, used to make slew rate constant
-getDrhoDtht = lambda rho, tht: turbo*0.5/(sizIm*pi) # function of drho/dtheta, with respect to rho and theta
+getDeltaK = lambda rho, tht: rho1 if rho == 0 else min(sqrt(srLim*gamma*rho*(dt)**2), 1/sizImg) # function of sampling interval, with respect to rho and theta, used to make slew rate constant
+getDrhoDtht = lambda rho, tht: turbo*0.5/(sizImg*pi) # function of drho/dtheta, with respect to rho and theta
 trjSpiral = genSpiral(getDeltaK, getDrhoDtht, 0, rhoMax) # derive trajectory
 
 print(f"pts of spiral: {turbo*trjSpiral.shape[0]}")
-print(f"pts of cartes: {sizIm*sizIm}")
+print(f"pts of cartes: {sizImg*sizImg}")
 
 # calculate gradient of spiral
 lstGrad_Ideal = tranTraj2Grad_Ideal(trjSpiral, dt)*(1/sizPix)

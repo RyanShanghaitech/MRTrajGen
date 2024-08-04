@@ -3,11 +3,11 @@ from matplotlib.pyplot import *
 from mrtrajgen import *
 
 sizPix = 1e-3 # m
-sizIm = 16
+sizImg = 16
 
 # generate trajectory of spiral
-getDeltaK = lambda rho, tht: 1/sizIm
-getDrhoDtht = lambda rho, tht: 0.5/((sizIm/2)*(2*pi))
+getDeltaK = lambda rho, tht: 1/sizImg
+getDrhoDtht = lambda rho, tht: 0.5/((sizImg/2)*(2*pi))
 trjSpiral = genSpiral(getDeltaK, getDrhoDtht) # derive trajectory
 
 # calculate gradient list and slew rate list
