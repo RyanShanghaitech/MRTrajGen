@@ -1,7 +1,7 @@
 from numpy import *
 from typing import Callable
 
-def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, phase:float|int=0, rhoMax:float|int=0.5) -> ndarray:
+def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMax:float|int=0.5) -> ndarray:
     """
     # description:
     generate spiral sampling trajectory
@@ -33,10 +33,10 @@ def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, phase:float|int=0, rhoMa
         else:
             break
 
-    lstKx = lstRho*cos(lstTht + phase)
-    lstKy = lstRho*sin(lstTht + phase)
+    lstKx = [lstRho*cos(lstTht + phase) for phase in lstPh]
+    lstKy = [lstRho*sin(lstTht + phase) for phase in lstPh]
 
-    return array([lstKx, lstKy]).T.copy()
+    return array([lstKx, lstKy]).transpose([1,2,0])
 
 def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     """
@@ -55,11 +55,8 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     assert(size(lstRho.shape) == 1)
     
     # generate kspace trajectory
-    lstKx = zeros([lstTht.size, lstRho.size], dtype=float64)
-    lstKy = zeros([lstTht.size, lstRho.size], dtype=float64)
-    for idxTht in range(lstTht.size):
-        lstKx[idxTht,:] = lstRho*cos(lstTht[idxTht])
-        lstKy[idxTht,:] = lstRho*sin(lstTht[idxTht])
+    lstKx = [lstRho*cos(lstTht[idxTht]) for idxTht in range(lstTht.size)]
+    lstKy = [lstRho*sin(lstTht[idxTht]) for idxTht in range(lstTht.size)]
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
