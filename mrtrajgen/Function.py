@@ -62,3 +62,22 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
         lstKy[idxTht,:] = lstRho*sin(lstTht[idxTht])
 
     return array([lstKx, lstKy]).transpose([1,2,0])
+
+def genCartesian(numPt:int|float, max:int|float=0.5) -> ndarray:
+    """
+    # description:
+    generate cartesian sampling trajectory
+
+    # parameter:
+    `numPt`: number of point in one dimension
+    `max`: maximum coordinate value, 0.5 for kspace
+
+    # return:
+    trajectory: [[x1, y1], [x2, y2], ..., [xn, yn]]
+    """
+    # shape check
+    lstKx, lstKy = meshgrid(
+        linspace(-max, max, numPt, endpoint=False),
+        linspace(-max, max, numPt, endpoint=False))
+    return array([lstKx.flatten(), lstKy.flatten()]).T
+    

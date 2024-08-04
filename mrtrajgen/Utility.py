@@ -24,7 +24,7 @@ def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
 
     return lstGrad
 
-def tranTraj2Grad_MinRamp(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) -> ndarray:
+def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) -> ndarray:
     """
     # description:
     transform trajectory in k-space to gradient,
@@ -52,7 +52,7 @@ def tranTraj2Grad_MinRamp(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6
 
     return lstGrad
 
-def tranTraj2Grad_MaxRamp(lstTraj:ndarray, dt:float|int, sr:float|int, gamma:float|int=42.58e6) -> ndarray:
+def tranTraj2Grad_MaxSR(lstTraj:ndarray, dt:float|int, sr:float|int, gamma:float|int=42.58e6) -> ndarray:
     """
     # description:
     transform trajectory in k-space to gradient,
