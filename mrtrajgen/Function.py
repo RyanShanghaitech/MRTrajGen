@@ -63,7 +63,7 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
-def genCartesian(numPt:int|float, max:int|float=0.5) -> ndarray:
+def genCart(numPt:int|float, max:int|float=0.5) -> ndarray:
     """
     # description:
     generate cartesian sampling trajectory
