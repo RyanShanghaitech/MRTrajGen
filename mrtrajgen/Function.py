@@ -4,7 +4,7 @@ from typing import Callable
 def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, phase:float|int=0, rhoMax:float|int=0.5) -> ndarray:
     """
     # description:
-    generate spiral trajectory
+    generate spiral sampling trajectory
 
     # parameter:
     `getDeltaK`:Callable: function of sampling interval with respect to rho and theta, e.g. `lambda rho, tht: dNyq` for spiral with constant Nyquist sampling interval
@@ -39,6 +39,17 @@ def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, phase:float|int=0, rhoMa
     return array([lstKx, lstKy]).T.copy()
 
 def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
+    """
+    # description:
+    generate radial sampling trajectory
+
+    # parameter:
+    `lstTht`: list of theta of spokes
+    `lstRho`: list of rho of spokes
+
+    # return:
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]]
+    """
     # shape check
     assert(size(lstTht.shape) == 1)
     assert(size(lstRho.shape) == 1)
