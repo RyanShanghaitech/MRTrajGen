@@ -17,7 +17,8 @@ print(f"srLim={srLim}")
 rho1 = gamma*(srLim*dt)*dt/2 # rho of first point
 getDeltaK = lambda rho, tht: rho1 if rho == 0 else min(sqrt(srLim*gamma*rho*(dt)**2), 1/sizImg) # function of sampling interval, with respect to rho and theta, used to make slew rate constant
 getDrhoDtht = lambda rho, tht: turbo*0.5/(sizImg*pi) # function of drho/dtheta, with respect to rho and theta
-trjSpiral = genSpiral(getDeltaK, getDrhoDtht, [0], rhoMax).reshape([-1, 2]) # derive trajectory
+trjSpiral,_,_ = genSpiral(getDeltaK, getDrhoDtht, [0], rhoMax) # derive trajectory
+trjSpiral = trjSpiral.reshape([-1, 2])
 
 print(f"pts of spiral: {turbo*trjSpiral.shape[0]}")
 print(f"pts of cartes: {sizImg*sizImg}")

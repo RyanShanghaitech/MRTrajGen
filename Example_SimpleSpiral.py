@@ -7,7 +7,7 @@ sizImg = 16
 turbo = 8
 
 # generate trajectory of spiral
-trjSpiral = genSpiral(
+trjSpiral,_,_ = genSpiral(
     lambda rho, tht: 1/sizImg,
     lambda rho, tht: turbo*0.5/((sizImg/2)*(2*pi)),
     linspace(0, 2*pi, turbo)) # derive trajectory

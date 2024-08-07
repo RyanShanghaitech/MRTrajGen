@@ -1,7 +1,7 @@
 from numpy import *
 from typing import Callable
 
-def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMax:float|int=0.5) -> ndarray:
+def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMax:float|int=0.5) -> tuple[ndarray, ndarray, ndarray]:
     """
     # description:
     generate spiral sampling trajectory
@@ -13,10 +13,13 @@ def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMa
     `rhoMax`: maximum value of rho, 0.5 covers the whole kspace
 
     # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]]
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]],
+    list of rho,
+    list of dk with respect to list of rho
     """
     lstTht = array([0, 2*pi])
     lstRho = array([0, getDeltaK(0, 0)])
+    lstDk = array([0, getDeltaK(0, 0)])
     while True:
         dK = getDeltaK(lstRho[-1], lstTht[-1])
         dRhoTht = getDrhoDtht(lstRho[-1], lstTht[-1])
@@ -30,13 +33,15 @@ def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMa
         if(rhoNew < rhoMax):
             lstTht = append(lstTht, thtNew)
             lstRho = append(lstRho, rhoNew)
+            lstDk = append(lstDk, dK)
         else:
             break
 
     lstKx = [lstRho*cos(lstTht + phase) for phase in lstPh]
     lstKy = [lstRho*sin(lstTht + phase) for phase in lstPh]
+    lstKxKy = array([lstKx, lstKy]).transpose([1,2,0])
 
-    return array([lstKx, lstKy]).transpose([1,2,0])
+    return lstKxKy, lstRho, lstDk
 
 def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     """

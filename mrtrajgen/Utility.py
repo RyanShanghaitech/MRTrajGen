@@ -19,6 +19,7 @@ def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
     multiply the returned value by `(1 pix)/(length per pix in m)` to get the actual gradient in `m`.
     """
 
+    lstTraj = concatenate([zeros([1, lstTraj.shape[1]]), lstTraj])
     lstDeltaK = (lstTraj[1:,:] - lstTraj[:-1,:]) # /pix
     lstGrad = lstDeltaK/(gamma*dt) # T/pix
 
@@ -117,6 +118,7 @@ def getSlewRate(lstGrad:ndarray, dt:int|float) -> ndarray:
     # return:
     list of magnitude of slew rate
     """
-    lstSlewRate = (lstGrad[:,:] - concatenate([[[0, 0]], lstGrad[:-1,:]]))/dt # unit: T/pix/s
+    lstGrad = concatenate([zeros([1, lstGrad.shape[1]]), lstGrad])
+    lstSlewRate = (lstGrad[1:,:] - lstGrad[:-1,:])/dt # unit: T/pix/s
     
     return sqrt(lstSlewRate[:,0]**2 + lstSlewRate[:,1]**2)
