@@ -49,7 +49,7 @@ def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
         if idxGrad == 0:
             lstGrad[idxGrad,:] = 2*lstGrad_Ideal[idxGrad,:]
         else:
-            lstGrad[idxGrad,:] = 2*lstGrad_Ideal[idxGrad,:] - lstGrad_Ideal[idxGrad-1,:]
+            lstGrad[idxGrad,:] = 2*lstGrad_Ideal[idxGrad,:] - lstGrad[idxGrad-1,:]
 
     return lstGrad
 
@@ -122,3 +122,9 @@ def getSlewRate(lstGrad:ndarray, dt:int|float) -> ndarray:
     lstSlewRate = (lstGrad[1:,:] - lstGrad[:-1,:])/dt # unit: T/pix/s
     
     return sqrt(lstSlewRate[:,0]**2 + lstSlewRate[:,1]**2)
+
+def getSlewRate_Pix(k1:ndarray, k0:ndarray, grad0:ndarray, dt:int|float, gamma:int|float=42.58e6) -> ndarray:
+    k1 = asarray(k1); k0 = asarray(k0); grad0 = asarray(grad0)
+    assert(k1.shape == (2,) and k0.shape == (2,) and grad0.shape == (2,))
+    gradMean = (k1 - k0)/gamma/dt
+    return (gradMean - grad0)/(dt/2)

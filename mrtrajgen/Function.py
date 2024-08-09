@@ -1,7 +1,8 @@
 from numpy import *
 from typing import Callable
+from .Utility import getSlewRate_Pix
 
-def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMax:float|int=0.5) -> tuple[ndarray, ndarray, ndarray]:
+def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0, rhoMax:float|int=0.5) -> ndarray:
     """
     # description:
     generate spiral sampling trajectory
@@ -13,33 +14,80 @@ def genSpiral(getDeltaK:Callable, getDrhoDtht:Callable, lstPh:ndarray=[0], rhoMa
     `rhoMax`: maximum value of rho, 0.5 covers the whole kspace
 
     # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]],
-    list of rho,
-    list of dk with respect to list of rho
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]]
     """
     lstTht = array([0, 2*pi])
     lstRho = array([0, getDeltaK(0, 0)])
-    lstDk = array([0, getDeltaK(0, 0)])
     while True:
         dK = getDeltaK(lstRho[-1], lstTht[-1])
-        dRhoTht = getDrhoDtht(lstRho[-1], lstTht[-1])
+        quoDrhoDtht = getDrhoDtht(lstRho[-1], lstTht[-1])
         
-        dTht = dK/sqrt(dRhoTht**2 + lstRho[-1]**2)
-        dRho = dTht*dRhoTht
+        dTht = dK/sqrt(quoDrhoDtht**2 + lstRho[-1]**2)
+        dRho = dTht*quoDrhoDtht
         
         # append new point
         thtNew = lstTht[-1]+dTht
         rhoNew = lstRho[-1]+dRho
+        print(f"rhoNew={rhoNew}")
         if(rhoNew < rhoMax):
             lstTht = append(lstTht, thtNew)
             lstRho = append(lstRho, rhoNew)
-            lstDk = append(lstDk, dK)
         else:
             break
 
-    lstKx = [lstRho*cos(lstTht + phase) for phase in lstPh]
-    lstKy = [lstRho*sin(lstTht + phase) for phase in lstPh]
-    lstKxKy = array([lstKx, lstKy]).transpose([1,2,0])
+    lstKx = lstRho*cos(lstTht + phase)
+    lstKy = lstRho*sin(lstTht + phase)
+    lstKxKy = array([lstKx, lstKy]).T
+
+    return lstKxKy
+
+def genSpiral_Slewrate(getSlewRate:Callable, getDrhoDtht:Callable, dt:int|float, phase:int|float=0, rhoMax:float|int=0.5, gamma:float|int=42.58e6) -> tuple[ndarray, ndarray, ndarray]:
+    lstTht = array([0, 2*pi])
+    lstRho = array([0, gamma*(getSlewRate(0, 0)*dt)*dt/2])
+    lstKx = lstRho*cos(lstTht + phase)
+    lstKy = lstRho*sin(lstTht + phase)
+    lstDk = lstRho.copy()
+    grad = getSlewRate(0, 0)*dt*array([cos(phase), sin(phase)])
+    while True:
+        dK = 3*lstDk[-1]
+        limSlewRate = getSlewRate(lstRho[-1], lstTht[-1])
+        quoDrhoDtht = getDrhoDtht(lstRho[-1], lstTht[-1])
+        while True:
+            dTht = dK/sqrt(quoDrhoDtht**2 + lstRho[-1]**2)
+            dRho = dTht*quoDrhoDtht
+            
+            thtNew = lstTht[-1]+dTht
+            rhoNew = lstRho[-1]+dRho
+            kxNew = rhoNew*cos(thtNew + phase)
+            kyNew = rhoNew*sin(thtNew + phase)
+
+            sr = getSlewRate_Pix(array([kxNew, kyNew]), array([lstKx[-1], lstKy[-1]]), grad, dt)
+            sr = sqrt(sr[0]**2 + sr[1]**2)
+
+            errSlewRate = sr - limSlewRate
+            if abs(errSlewRate) < 1e-1*limSlewRate:
+                break
+            else:
+                print(f"sr={sr}, lim={limSlewRate}")
+                biasDk = -1e-3*sign(errSlewRate)*sqrt(abs(errSlewRate))
+                dK += biasDk
+
+        # append new point
+        print("")
+        print(f"rhoNew={rhoNew}")
+        if(rhoNew < rhoMax):
+            lstTht = append(lstTht, thtNew)
+            lstRho = append(lstRho, rhoNew)
+            lstKx = append(lstKx, kxNew)
+            lstKy = append(lstKy, kyNew)
+            lstDk = append(lstDk, dK)
+
+            gradMean = array([lstKx[-1]-lstKx[-2], lstKy[-1]-lstKy[-2]])/gamma/dt
+            grad = grad + 2*(gradMean - grad)
+        else:
+            break
+
+    lstKxKy = array([lstKx, lstKy]).T
 
     return lstKxKy, lstRho, lstDk
 
