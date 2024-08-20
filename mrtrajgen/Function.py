@@ -1,20 +1,20 @@
 from numpy import *
 from typing import Callable
-from .Utility import getSlewRate_Pix
+from .Utility import tranGrad2Traj_MinSR
 
 def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0, rhoMax:float|int=0.5) -> ndarray:
     """
     # description:
-    generate spiral sampling trajectory
+    generate spiral sampling trajectory, subject to sampling interval
 
     # parameter:
-    `getDeltaK`:Callable: function of sampling interval with respect to rho and theta, e.g. `lambda rho, tht: dNyq` for spiral with constant Nyquist sampling interval
-    `getDrhoDtht`:Callable: function of dRho/dTheta with respect to rho and theta, e.g. `lambda rho, tht: b` for Archimedean spiral, `lambda rho, tht: rho + 1` for variable density spiral
-    `phase`: phase controlling rotation of spiral
-    `rhoMax`: maximum value of rho, 0.5 covers the whole kspace
+    `getDeltaK`:Callable: function of sampling interval with respect to rho and theta, e.g. `lambda rho, tht: dNyq` for spiral with constant Nyquist sampling interval, in `/pix`
+    `getDrhoDtht`:Callable: function of dRho/dTheta with respect to rho and theta, e.g. `lambda rho, tht: b` for Archimedean spiral, `lambda rho, tht: rho + 1` for variable density spiral, in `/pix/rad`
+    `phase`: phase controlling rotation of spiral, in `rad`
+    `rhoMax`: maximum value of rho, in `/pix`
 
     # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]]
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
     """
     lstTht = array([0, 2*pi])
     lstRho = array([0, getDeltaK(0, 0)])
@@ -28,7 +28,6 @@ def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0
         # append new point
         thtNew = lstTht[-1]+dTht
         rhoNew = lstRho[-1]+dRho
-        print(f"rhoNew={rhoNew}")
         if(rhoNew < rhoMax):
             lstTht = append(lstTht, thtNew)
             lstRho = append(lstRho, rhoNew)
@@ -41,55 +40,56 @@ def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0
 
     return lstKxKy
 
-def genSpiral_Slewrate(getSlewRate:Callable, getDrhoDtht:Callable, dt:int|float, phase:int|float=0, rhoMax:float|int=0.5, gamma:float|int=42.58e6) -> tuple[ndarray, ndarray, ndarray]:
-    lstTht = array([0, 2*pi])
-    lstRho = array([0, gamma*(getSlewRate(0, 0)*dt)*dt/2])
-    lstKx = lstRho*cos(lstTht + phase)
-    lstKy = lstRho*sin(lstTht + phase)
-    lstDk = lstRho.copy()
-    grad = getSlewRate(0, 0)*dt*array([cos(phase), sin(phase)])
-    while True:
-        dK = 3*lstDk[-1]
-        limSlewRate = getSlewRate(lstRho[-1], lstTht[-1])
-        quoDrhoDtht = getDrhoDtht(lstRho[-1], lstTht[-1])
-        while True:
-            dTht = dK/sqrt(quoDrhoDtht**2 + lstRho[-1]**2)
-            dRho = dTht*quoDrhoDtht
-            
-            thtNew = lstTht[-1]+dTht
-            rhoNew = lstRho[-1]+dRho
-            kxNew = rhoNew*cos(thtNew + phase)
-            kyNew = rhoNew*sin(thtNew + phase)
+def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, sr:int|float, dt:int|float, kmax:int|float, oversamp:int|float=2, gamma:int|float=42.58e6) -> tuple[ndarray, ndarray]:
+    '''
+    # description
+    generate spiral trajectory, subject to slew rate
 
-            sr = getSlewRate_Pix(array([kxNew, kyNew]), array([lstKx[-1], lstKy[-1]]), grad, dt)
-            sr = sqrt(sr[0]**2 + sr[1]**2)
+    # parameter
+    `getD0RhoTht`: function of 0th order derivation of rho with respect to theta, in `/pix`
+    `getD1RhoTht`: function of 1st order derivation of rho with respect to theta, in `/pix/rad`
+    `getD2RhoTht`: function of 2nd order derivation of rho with respect to theta, in `/pix/rad^2`
 
-            errSlewRate = sr - limSlewRate
-            if abs(errSlewRate) < 1e-1*limSlewRate:
-                break
-            else:
-                print(f"sr={sr}, lim={limSlewRate}")
-                biasDk = -1e-3*sign(errSlewRate)*sqrt(abs(errSlewRate))
-                dK += biasDk
+    # return
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
+    gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `T/pix`
+    '''
+    sovQDF = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
+    lstTht = empty([0], dtype=float64)
+    lstRho = empty([0], dtype=float64)
 
-        # append new point
-        print("")
-        print(f"rhoNew={rhoNew}")
-        if(rhoNew < rhoMax):
-            lstTht = append(lstTht, thtNew)
-            lstRho = append(lstRho, rhoNew)
-            lstKx = append(lstKx, kxNew)
-            lstKy = append(lstKy, kyNew)
-            lstDk = append(lstDk, dK)
+    d0ThtTime = 0
+    d1ThtTime = 0
+    d2ThtTime = 0
+    d0RhoTht = getD0RhoTht(d0ThtTime); assert(d0RhoTht == 0)
+    d1RhoTht = getD1RhoTht(d0ThtTime)
+    d2RhoTht = getD2RhoTht(d0ThtTime)
+    while d0RhoTht < kmax and lstRho.size < 1e6:
+        a = d0RhoTht**2 + d1RhoTht**2
+        b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
+        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2*gamma**2
 
-            gradMean = array([lstKx[-1]-lstKx[-2], lstKy[-1]-lstKy[-2]])/gamma/dt
-            grad = grad + 2*(gradMean - grad)
-        else:
-            break
+        d2ThtTime = sovQDF(a, b, c)
+        d1ThtTime += d2ThtTime*(dt/oversamp)
+        d0ThtTime += d1ThtTime*(dt/oversamp)
+        d0RhoTht = getD0RhoTht(d0ThtTime)
+        d1RhoTht = getD1RhoTht(d0ThtTime)
+        d2RhoTht = getD2RhoTht(d0ThtTime)
 
-    lstKxKy = array([lstKx, lstKy]).T
+        lstTht = append(lstTht, d0ThtTime)
+        lstRho = append(lstRho, d0RhoTht)
 
-    return lstKxKy, lstRho, lstDk
+    lstRho = lstRho[::oversamp]
+    lstTht = lstTht[::oversamp]
+    lstTraj_Ideal = array([
+        lstRho*cos(lstTht),
+        lstRho*sin(lstTht)]).T
+    lstGrad = array([
+        (lstTraj_Ideal[1:,0] - lstTraj_Ideal[:-1,0])/dt/gamma,
+        (lstTraj_Ideal[1:,1] - lstTraj_Ideal[:-1,1])/dt/gamma]).T
+    lstTraj = tranGrad2Traj_MinSR(lstGrad, dt)
+
+    return lstTraj, lstGrad
 
 def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     """
@@ -97,11 +97,11 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     generate radial sampling trajectory
 
     # parameter:
-    `lstTht`: list of theta of spokes
-    `lstRho`: list of rho of spokes
+    `lstTht`: list of theta of spokes, in `rad`
+    `lstRho`: list of rho of spokes, in `/pix`
 
     # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]]
+    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
     """
     # shape check
     assert(size(lstTht.shape) == 1)
@@ -120,7 +120,7 @@ def genCart(numPt:int|float, max:int|float=0.5) -> ndarray:
 
     # parameter:
     `numPt`: number of point in one dimension
-    `max`: maximum coordinate value, 0.5 for kspace
+    `max`: maximum coordinate value
 
     # return:
     trajectory: [[x1, y1], [x2, y2], ..., [xn, yn]]
