@@ -23,7 +23,10 @@ lstTraj, lstGrad = genSpiral_Slewrate(
     lambda tht: quoRhoTht*(tht + evoRhoTht/2*tht**2),
     lambda tht: quoRhoTht*(1 + evoRhoTht*tht),
     lambda tht: quoRhoTht*evoRhoTht,
-    sr, dt, kmax, 4)
+    sr, dt, kmax, 4, True)
+
+numCopy = turbo
+lstTraj = copyTraj(lstTraj, numCopy)
 
 # derive slew rate
 lstSR = tranGrad2Slewrate(lstGrad, dt)
@@ -32,7 +35,8 @@ lstSR = tranGrad2Slewrate(lstGrad, dt)
 figure()
 
 subplot(131)
-plot(lstTraj[:,0], lstTraj[:,1], marker=".")
+for idxTrj in range(numCopy):
+    plot(lstTraj[idxTrj,:,0], lstTraj[idxTrj,:,1], marker=".")
 axis("equal"); title("kx-ky (/m)")
 
 subplot(132)

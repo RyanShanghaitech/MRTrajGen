@@ -161,3 +161,26 @@ def getSlewRate_Pix(k1:ndarray, k0:ndarray, grad0:ndarray, dt:int|float, gamma:i
     assert(k1.shape == (2,) and k0.shape == (2,) and grad0.shape == (2,))
     gradMean = (k1 - k0)/gamma/dt
     return (gradMean - grad0)/(dt/2)
+
+def copyTraj(traj:ndarray, numCopy:int, intv:int|float=None):
+    """
+    # description:
+    copy trajectory
+
+    # parameter:
+    `traj`: trajectory to copy
+    `numCopy`: number of copies
+    `intv`: interval between two copies, in `rad`
+
+    # return:
+    copied trajectory
+    """
+    assert(traj.ndim == 2) # there should be only one trajectory
+    assert(traj.shape[1] == 2) # only support 2D trajectory
+    if intv is None:
+        intv = (2*pi)/numCopy
+    trjNew = zeros([numCopy, traj.shape[0], traj.shape[1]], dtype=float64)
+    for idxCopy in range(numCopy):
+        trjNew[idxCopy,:,0] = cos(intv*idxCopy)*traj[:,0] - sin(intv*idxCopy)*traj[:,1]
+        trjNew[idxCopy,:,1] = sin(intv*idxCopy)*traj[:,0] + cos(intv*idxCopy)*traj[:,1]
+    return trjNew

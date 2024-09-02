@@ -40,7 +40,7 @@ def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0
 
     return lstKxKy
 
-def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, sr:int|float, dt:int|float, kmax:int|float, oversamp:int|float=2, gamma:int|float=42.58e6) -> tuple[ndarray, ndarray]:
+def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, sr:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False, gamma:int|float=42.58e6) -> tuple[ndarray, ndarray]:
     '''
     # description
     generate spiral trajectory, subject to slew rate
@@ -49,6 +49,12 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     `getD0RhoTht`: function of 0th order derivation of rho with respect to theta, in `/pix`
     `getD1RhoTht`: function of 1st order derivation of rho with respect to theta, in `/pix/rad`
     `getD2RhoTht`: function of 2nd order derivation of rho with respect to theta, in `/pix/rad^2`
+    `sr`: slew rate of the spiral, in `T/pix/s`
+    `dt`: time between 2 adjacent points, in `s`
+    `kmax`: maximum value of k, in `/pix`, typically `0.5`
+    `oversamp`: oversampling ratio when solving numerial equation
+    `flagDebugInfo`: whether print debug info
+    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return
     kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
@@ -64,7 +70,7 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     d0RhoTht = getD0RhoTht(d0ThtTime); assert(d0RhoTht == 0)
     d1RhoTht = getD1RhoTht(d0ThtTime)
     d2RhoTht = getD2RhoTht(d0ThtTime)
-    while d0RhoTht < kmax and lstRho.size < 1e6:
+    while d0RhoTht < kmax:
         a = d0RhoTht**2 + d1RhoTht**2
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
         c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2*gamma**2
@@ -78,6 +84,8 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
 
         lstTht = append(lstTht, d0ThtTime)
         lstRho = append(lstRho, d0RhoTht)
+
+        if flagDebugInfo and lstRho.size%100 == 0: print(f"rho = {d0RhoTht:.2f}/{kmax:.2f}")
 
     lstRho = lstRho[::oversamp]
     lstTht = lstTht[::oversamp]
