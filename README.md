@@ -9,6 +9,9 @@ This project includes:
 This is a project for generating desired trajectories for Magnetic Resonance Imaging. Just for personal use and test.
 
 ## Theory
+### Fixed Slew Rate Spiral
+See `proof.py`
+
 ### Fixed Interval Spiral
 ![](Resource/figConIntSpiral.png)
 
@@ -60,7 +63,7 @@ $$
 G_1=G_0-\frac{Rt}{s}\pm\sqrt{(\frac{Rt}{s}-G_0)^2-(G_0^2-\frac{2GtR}{s})}
 $$
 
-### Slew rate calculation
+### Slew Rate Calculation on a Circle
 slew rate in assumption 3 can be calculated by the differential coefficient of $G(t)$:
 $$
 k(t)=\gamma\int G(t)dt\\
