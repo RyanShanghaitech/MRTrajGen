@@ -97,6 +97,7 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     lstGrad = array([
         (lstTraj_Ideal[1:,0] - lstTraj_Ideal[:-1,0])/dt/gamma,
         (lstTraj_Ideal[1:,1] - lstTraj_Ideal[:-1,1])/dt/gamma]).T
+    lstGrad = concatenate([array([[0, 0]]), lstGrad], axis=0)
     lstTraj = tranGrad2Traj_MinSR(lstGrad, dt)
 
     return lstTraj, lstGrad

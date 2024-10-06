@@ -1,6 +1,6 @@
 from numpy import *
 from matplotlib.pyplot import *
-from mrtrajgen import *
+from mrtrjgen import *
 
 sizPix = 1e-3 # m
 sizImg = 16

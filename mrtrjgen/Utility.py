@@ -98,7 +98,6 @@ def tranGrad2Slewrate(lstGrad:ndarray, dt:int|float) -> ndarray:
     # return:
     list of magnitude of slew rate (T/pix/s)
     """
-    lstGrad = concatenate((zeros([1, lstGrad.shape[1]]), lstGrad))
     lstSlewRate = (lstGrad[1:,:] - lstGrad[:-1,:])/dt # unit: T/pix/s
     
     return sqrt(lstSlewRate[:,0]**2 + lstSlewRate[:,1]**2)

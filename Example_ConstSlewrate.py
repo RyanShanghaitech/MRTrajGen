@@ -1,6 +1,6 @@
 from numpy import *
 from matplotlib.pyplot import *
-from mrtrajgen import *
+from mrtrjgen import *
 
 # parameters
 numPix = 128
@@ -24,6 +24,9 @@ lstTraj, lstGrad = genSpiral_Slewrate(
     lambda tht: quoRhoTht*(1 + evoRhoTht*tht),
     lambda tht: quoRhoTht*evoRhoTht,
     sr, inf, dt, kmax, 10, True)
+
+print(lstTraj[:10,:])
+print(lstGrad[:10,:])
 
 numCopy = turbo
 lstTraj = copyTraj(lstTraj, numCopy)
