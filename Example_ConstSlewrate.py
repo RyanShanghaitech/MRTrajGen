@@ -4,9 +4,9 @@ from mrtrajgen import *
 
 # parameters
 numPix = 128
-widFov = 0.1 # m
+widFov = 0.4 # m
 gamma = 42.58e6
-dt = 1e-6
+dt = 10e-6
 sr = 100*(widFov/numPix) # T/pix/s
 flagVariableDensity = 0
 if flagVariableDensity:
@@ -23,7 +23,7 @@ lstTraj, lstGrad = genSpiral_Slewrate(
     lambda tht: quoRhoTht*(tht + evoRhoTht/2*tht**2),
     lambda tht: quoRhoTht*(1 + evoRhoTht*tht),
     lambda tht: quoRhoTht*evoRhoTht,
-    sr, dt, kmax, 4, True)
+    sr, inf, dt, kmax, 10, True)
 
 numCopy = turbo
 lstTraj = copyTraj(lstTraj, numCopy)
