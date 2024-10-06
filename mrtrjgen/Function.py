@@ -40,7 +40,7 @@ def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0
 
     return lstKxKy
 
-def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, srlim:int|float, glim:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False, gamma:int|float=42.58e6) -> tuple[ndarray, ndarray]:
+def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, srlim:int|float, glim:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False) -> tuple[ndarray, ndarray]:
     '''
     # description
     generate spiral trajectory, subject to slew rate
@@ -49,17 +49,16 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     `getD0RhoTht`: function of 0th order derivation of rho with respect to theta, in `/pix`
     `getD1RhoTht`: function of 1st order derivation of rho with respect to theta, in `/pix/rad`
     `getD2RhoTht`: function of 2nd order derivation of rho with respect to theta, in `/pix/rad^2`
-    `srlim`: slew rate limit, in `T/pix/s`
-    `grad`: gradient limit, in `T/pix`
+    `srlim`: slew rate limit, in `Hz/pix/s`
+    `grad`: gradient limit, in `Hz/pix`
     `dt`: time between 2 adjacent points, in `s`
     `kmax`: maximum value of k, in `/pix`, typically `0.5`
     `oversamp`: oversampling ratio when solving numerial equation
     `flagDebugInfo`: whether print debug info
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return
     kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
-    gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `T/pix`
+    gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `Hz/pix`
     '''
     sovQDF = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
     lstTht = empty([0], dtype=float64)
@@ -74,11 +73,11 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     while d0RhoTht < kmax:
         a = d0RhoTht**2 + d1RhoTht**2
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
-        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - srlim**2*gamma**2
+        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - srlim**2
 
         d2ThtTime = sovQDF(a, b, c)
         d1ThtTime += d2ThtTime*(dt/oversamp)
-        if d1ThtTime*dt*d0RhoTht > gamma*glim*dt: d1ThtTime = min(d1ThtTime, gamma*glim/d0RhoTht) # dk >= d1ThtTime*dt*d0RhoTht
+        if d1ThtTime*dt*d0RhoTht > glim*dt: d1ThtTime = min(d1ThtTime, glim/d0RhoTht) # dk >= d1ThtTime*dt*d0RhoTht
         d0ThtTime += d1ThtTime*(dt/oversamp)
         d0RhoTht = getD0RhoTht(d0ThtTime)
         d1RhoTht = getD1RhoTht(d0ThtTime)
@@ -95,8 +94,8 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
         lstRho*cos(lstTht),
         lstRho*sin(lstTht)]).T
     lstGrad = array([
-        (lstTraj_Ideal[1:,0] - lstTraj_Ideal[:-1,0])/dt/gamma,
-        (lstTraj_Ideal[1:,1] - lstTraj_Ideal[:-1,1])/dt/gamma]).T
+        (lstTraj_Ideal[1:,0] - lstTraj_Ideal[:-1,0])/dt,
+        (lstTraj_Ideal[1:,1] - lstTraj_Ideal[:-1,1])/dt]).T
     lstGrad = concatenate([array([[0, 0]]), lstGrad], axis=0)
     lstTraj = tranGrad2Traj_MinSR(lstGrad, dt)
 

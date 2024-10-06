@@ -7,7 +7,7 @@ numPix = 128
 widFov = 0.4 # m
 gamma = 42.58e6
 dt = 10e-6
-sr = 100*(widFov/numPix) # T/pix/s
+sr = 100*gamma*(widFov/numPix) # Hz/pix/s
 flagVariableDensity = 0
 if flagVariableDensity:
     turbo = 1 # variable density spiral
@@ -43,16 +43,16 @@ for idxTrj in range(numCopy):
 axis("equal"); title("kx-ky (/m)")
 
 subplot(132)
-plot(lstSR*(numPix/widFov), marker=".")
-ylim([0, 2*sr*(numPix/widFov)]); title("slew rate (T/m/s)")
+plot(lstSR/gamma*(numPix/widFov), marker=".")
+ylim([0, 2*sr/gamma*(numPix/widFov)]); title("slew rate (T/m/s)")
 
 subplot(133)
-plot(lstSR*(numPix/widFov), marker=".")
+plot(lstSR/gamma*(numPix/widFov), marker=".")
 title("slew rate (T/m/s)")
 
 figure()
-plot(lstGrad[:,0]*(numPix/widFov), marker=".")
-plot(lstGrad[:,1]*(numPix/widFov), marker=".")
+plot(lstGrad[:,0]/gamma*(numPix/widFov), marker=".")
+plot(lstGrad[:,1]/gamma*(numPix/widFov), marker=".")
 title("gradient (T/m)")
 
 show()
