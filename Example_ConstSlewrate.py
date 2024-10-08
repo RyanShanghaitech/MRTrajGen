@@ -4,29 +4,26 @@ from mrtrjgen import *
 
 # parameters
 numPix = 128
-widFov = 0.4 # m
+widFov = 0.2 # m
 gamma = 42.58e6
 dt = 10e-6
 sr = 100*gamma*(widFov/numPix) # Hz/pix/s
 flagVariableDensity = 0
 if flagVariableDensity:
     turbo = 1 # variable density spiral
-    evoRhoTht = 0.1
+    evoRhoTht = 1.1
 else:
-    turbo = 48 # homogeneous spiral
-    evoRhoTht = 0
+    turbo = 64 # homogeneous spiral
+    evoRhoTht = 1
 kmax = 0.5 # /pix
 quoRhoTht = kmax/(2*pi)/(numPix/(2*turbo))
 
 # generate trajectory
 lstTraj, lstGrad = genSpiral_Slewrate(
-    lambda tht: quoRhoTht*(tht + evoRhoTht/2*tht**2),
-    lambda tht: quoRhoTht*(1 + evoRhoTht*tht),
-    lambda tht: quoRhoTht*evoRhoTht,
+    lambda tht: quoRhoTht*(tht + (evoRhoTht-1)/2*tht**2),
+    lambda tht: quoRhoTht*(1 + (evoRhoTht-1)*tht),
+    lambda tht: quoRhoTht*(evoRhoTht-1),
     sr, inf, dt, kmax, 10, True)
-
-print(lstTraj[:10,:])
-print(lstGrad[:10,:])
 
 numCopy = turbo
 lstTraj = copyTraj(lstTraj, numCopy)

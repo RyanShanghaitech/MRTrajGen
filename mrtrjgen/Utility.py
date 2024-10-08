@@ -1,7 +1,7 @@
 from numpy import *
 from matplotlib.pyplot import *
 
-def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) -> ndarray:
+def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int) -> ndarray:
     """
     # description:
     transform trajectory in k-space to gradient,
@@ -10,10 +10,9 @@ def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
     # parameter:
     `lstTraj`: list of trajectory in k-space, `shape[0]` is the number of points, `shape[1]` is the dimension of k-space, in `/pix`, maximum should be `0.5`
     `dt`: time between two points in trajectory, in `s`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return:
-    list of gradient in k-space, in `T/pix`
+    list of gradient in k-space, in `Hz/pix`
 
     # note:
     multiply the returned value by `(1 pix)/(length per pix in m)` to get the actual gradient in `m`.
@@ -21,11 +20,11 @@ def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
 
     lstTraj = concatenate([zeros([1, lstTraj.shape[1]]), lstTraj])
     lstDeltaK = (lstTraj[1:,:] - lstTraj[:-1,:]) # /pix
-    lstGrad = lstDeltaK/(gamma*dt) # T/pix
+    lstGrad = lstDeltaK/dt # Hz/pix
 
     return lstGrad
 
-def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) -> ndarray:
+def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int) -> ndarray:
     """
     # description:
     transform trajectory in k-space to gradient,
@@ -34,16 +33,15 @@ def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
     # parameter:
     `lstTraj`: list of trajectory in k-space, `shape[0]` is the number of points, `shape[1]` is the dimension of k-space, in `/pix`, maximum should be `0.5`
     `dt`: time between two points in trajectory, in `s`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return:
-    list of gradient in k-space, in `T/pix`
+    list of gradient in k-space, in `Hz/pix`
 
     # note:
     multiply the returned value by `(1 pix)/(length per pix in m)` to get the actual gradient in `m`.
     """
     
-    lstGrad_Ideal = tranTraj2Grad_Ideal(lstTraj, dt, gamma)
+    lstGrad_Ideal = tranTraj2Grad_Ideal(lstTraj, dt)
     lstGrad = zeros(lstGrad_Ideal.shape, dtype=float64)
     for idxGrad in range(lstGrad_Ideal.shape[0]):
         if idxGrad == 0:
@@ -53,7 +51,7 @@ def tranTraj2Grad_MinSR(lstTraj:ndarray, dt:float|int, gamma:float|int=42.58e6) 
 
     return lstGrad
 
-def tranTraj2Grad_MaxSR(lstTraj:ndarray, dt:float|int, sr:float|int, gamma:float|int=42.58e6) -> ndarray:
+def tranTraj2Grad_MaxSR(lstTraj:ndarray, dt:float|int, sr:float|int) -> ndarray:
     """
     # description:
     transform trajectory in k-space to gradient,
@@ -62,17 +60,16 @@ def tranTraj2Grad_MaxSR(lstTraj:ndarray, dt:float|int, sr:float|int, gamma:float
     # parameter:
     `lstTraj`: list of trajectory in k-space, `shape[0]` is the number of points, `shape[1]` is the dimension of k-space, in `/pix`, maximum should be `0.5`
     `dt`: time between two points in trajectory, in `s`
-    `sr`: slew rate, in `T/pix/s`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
+    `sr`: slew rate, in `Hz/pix/s`
 
     # return:
-    list of gradient in k-space, in `T/pix`
+    list of gradient in k-space, in `Hz/pix`
 
     # note:
     multiply the returned value by `(1 pix)/(length per pix in m)` to get the actual gradient in `m`.
     """
     
-    lstGrad_Ideal = tranTraj2Grad_Ideal(lstTraj, dt, gamma)
+    lstGrad_Ideal = tranTraj2Grad_Ideal(lstTraj, dt)
     lstGrad = zeros(lstGrad_Ideal.shape, dtype=float64)
     for idxGrad in range(lstGrad_Ideal.shape[0]):
         prodGradTime = lstGrad_Ideal[idxGrad,:]*dt
@@ -92,37 +89,36 @@ def tranGrad2Slewrate(lstGrad:ndarray, dt:int|float) -> ndarray:
     get the slew rate of a gradient list
 
     # parameters:
-    `lstGrad`: list represents the gradient, dim0 for points, dim1 for axis, in `T/pix`
+    `lstGrad`: list represents the gradient, dim0 for points, dim1 for axis, in `Hz/pix`
     `dt`: time interval between two adjacent points, in `s`
 
     # return:
-    list of magnitude of slew rate (T/pix/s)
+    list of magnitude of slew rate (Hz/pix/s)
     """
-    lstSlewRate = (lstGrad[1:,:] - lstGrad[:-1,:])/dt # unit: T/pix/s
+    lstSlewRate = (lstGrad[1:,:] - lstGrad[:-1,:])/dt # unit: Hz/pix/s
     
     return sqrt(lstSlewRate[:,0]**2 + lstSlewRate[:,1]**2)
 
-def tranGrad2Traj_MinSR(lstGrad:ndarray, dt:int|float, gamma:int|float=42.58e6) -> ndarray:
+def tranGrad2Traj_MinSR(lstGrad:ndarray, dt:int|float) -> ndarray:
     """
     # description:
     get the trajectory of a gradient list
 
     # parameters:
-    `lstGrad`: list represents the gradient, dim0 for points, dim1 for axis, in `T/pix`
+    `lstGrad`: list represents the gradient, dim0 for points, dim1 for axis, in `Hz/pix`
     `dt`: time interval between two adjacent points, in `s`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return:
     list of trajectory in k-space (/pix)
     """
     lstTraj = array([[0, 0]], dtype=float64)
     for idxGrad in range(1, lstGrad.shape[0]):
-        dkx = gamma*(lstGrad[idxGrad, 0] + lstGrad[idxGrad-1, 0])*dt/2
-        dky = gamma*(lstGrad[idxGrad, 1] + lstGrad[idxGrad-1, 1])*dt/2
+        dkx = (lstGrad[idxGrad, 0] + lstGrad[idxGrad-1, 0])*dt/2
+        dky = (lstGrad[idxGrad, 1] + lstGrad[idxGrad-1, 1])*dt/2
         lstTraj = append(lstTraj, array([[lstTraj[-1,0]+dkx, lstTraj[-1,1]+dky]]), axis=0)
     return lstTraj
 
-def getSlewRate_Circle(dk:float|int, dt:float|int, rho:float|int, gamma:float|int=42.58e6) -> ndarray:
+def getSlewRate_Circle(dk:float|int, dt:float|int, rho:float|int) -> ndarray:
     """
     # description:
     get the maximum slew rate for a given `dk`, `dt`, `rho` in spiral trajectory
@@ -131,18 +127,17 @@ def getSlewRate_Circle(dk:float|int, dt:float|int, rho:float|int, gamma:float|in
     `dk`: distance between two points in k-space, in `/pix`
     `dt`: time between two points in trajectory, in `s`
     `rho`: distance between `k` and origin, range from `0` to `0.5`, in `/pix`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return:
-    maximum slew rate, in `T/pix/s`
+    maximum slew rate, in `Hz/pix/s`
 
     # note:
-    multiply the returned value by `(1 pix)/(length per pix in m)` to get the actual slew rate, in `T/m/s`.
+    multiply the returned value by `gamma*(1 pix)/(length per pix in m)` to get the actual slew rate, in `T/m/s`.
     """
 
-    return (dk**2)/(gamma*rho*dt**2) # derivation of `d2G/dt2`
+    return (dk**2)/(rho*dt**2) # derivation of `d2G/dt2`
 
-def getSlewRate_Pix(k1:ndarray, k0:ndarray, grad0:ndarray, dt:int|float, gamma:int|float=42.58e6) -> ndarray:
+def getSlewRate_Pix(k1:ndarray, k0:ndarray, grad0:ndarray, dt:int|float) -> ndarray:
     '''
     # description:
     get the slew rate of two adjacent points in k-space
@@ -150,15 +145,14 @@ def getSlewRate_Pix(k1:ndarray, k0:ndarray, grad0:ndarray, dt:int|float, gamma:i
     # parameter:
     `k1`: k-space point 1, in `/pix`
     `k0`: k-space point 0, in `/pix`
-    `grad0`: gradient at point 0, in `T/pix`
+    `grad0`: gradient at point 0, in `Hz/pix`
     `dt`: time interval between two adjacent points, in `s`
-    `gamma`: gyromagnetic ratio, in `Hz/T`
 
     # return:
-    slew rate, in `T/pix/s`
+    slew rate, in `Hz/pix/s`
     '''
     assert(k1.shape == (2,) and k0.shape == (2,) and grad0.shape == (2,))
-    gradMean = (k1 - k0)/gamma/dt
+    gradMean = (k1 - k0)/dt
     return (gradMean - grad0)/(dt/2)
 
 def copyTraj(traj:ndarray, numCopy:int, intv:int|float=None):
