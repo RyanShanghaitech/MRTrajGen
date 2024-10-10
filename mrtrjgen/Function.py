@@ -71,9 +71,13 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     d1RhoTht = getD1RhoTht(d0ThtTime)
     d2RhoTht = getD2RhoTht(d0ThtTime)
 
-    cnt = 1
+    lstTht = append(lstTht, d0ThtTime)
+    lstRho = append(lstRho, d0RhoTht)
+    idxPt = 1
+
     while d0RhoTht < kmax:
-        sr = srlim*(1 - exp(-cnt/oversamp)); cnt += 1
+        sr = srlim*(1 - exp(-idxPt/oversamp))
+        
         a = d0RhoTht**2 + d1RhoTht**2
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
         c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2
@@ -88,6 +92,7 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
 
         lstTht = append(lstTht, d0ThtTime)
         lstRho = append(lstRho, d0RhoTht)
+        idxPt += 1
 
         if flagDebugInfo and lstRho.size%1000 == 0: print(f"rho = {d0RhoTht:.2f}/{kmax:.2f}")
 

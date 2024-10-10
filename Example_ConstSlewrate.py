@@ -3,7 +3,7 @@ from matplotlib.pyplot import *
 from mrtrjgen import *
 
 # parameters
-numPix = 128
+numPix = 256
 widFov = 0.25 # m
 gamma = 42.58e6
 dt = 10e-6
@@ -13,7 +13,7 @@ if flagVariableDensity:
     turbo = 8 # variable density spiral
     evoRhoTht = 1 + 5e-2
 else:
-    turbo = 15 # homogeneous spiral
+    turbo = 16 # homogeneous spiral
     evoRhoTht = 1
 kmax = 0.5 # /pix
 quoRhoTht = kmax/(2*pi)/(numPix/(2*turbo))
