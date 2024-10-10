@@ -4,16 +4,16 @@ from mrtrjgen import *
 
 # parameters
 numPix = 128
-widFov = 0.2 # m
+widFov = 0.25 # m
 gamma = 42.58e6
 dt = 10e-6
 sr = 100*gamma*(widFov/numPix) # Hz/pix/s
 flagVariableDensity = 0
 if flagVariableDensity:
-    turbo = 1 # variable density spiral
-    evoRhoTht = 1.1
+    turbo = 8 # variable density spiral
+    evoRhoTht = 1 + 5e-2
 else:
-    turbo = 64 # homogeneous spiral
+    turbo = 15 # homogeneous spiral
     evoRhoTht = 1
 kmax = 0.5 # /pix
 quoRhoTht = kmax/(2*pi)/(numPix/(2*turbo))
@@ -24,6 +24,8 @@ lstTraj, lstGrad = genSpiral_Slewrate(
     lambda tht: quoRhoTht*(1 + (evoRhoTht-1)*tht),
     lambda tht: quoRhoTht*(evoRhoTht-1),
     sr, inf, dt, kmax, 10, True)
+print(f"lstTraj.shape = {lstTraj.shape}")
+print(f"lstGrad.shape = {lstGrad.shape}")
 
 numCopy = turbo
 lstTraj = copyTraj(lstTraj, numCopy)

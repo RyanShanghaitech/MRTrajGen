@@ -67,13 +67,16 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     d0ThtTime = 0
     d1ThtTime = 0
     d2ThtTime = 0
-    d0RhoTht = getD0RhoTht(d0ThtTime); assert(d0RhoTht == 0)
+    d0RhoTht = getD0RhoTht(d0ThtTime) # ; assert(d0RhoTht == 0)
     d1RhoTht = getD1RhoTht(d0ThtTime)
     d2RhoTht = getD2RhoTht(d0ThtTime)
+
+    cnt = 1
     while d0RhoTht < kmax:
+        sr = srlim*(1 - exp(-cnt/oversamp)); cnt += 1
         a = d0RhoTht**2 + d1RhoTht**2
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
-        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - srlim**2
+        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2
 
         d2ThtTime = sovQDF(a, b, c)
         d1ThtTime += d2ThtTime*(dt/oversamp)
@@ -90,14 +93,13 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
 
     lstRho = lstRho[::oversamp]
     lstTht = lstTht[::oversamp]
-    lstTraj_Ideal = array([
+    lstTraj = array([
         lstRho*cos(lstTht),
         lstRho*sin(lstTht)]).T
     lstGrad = array([
-        (lstTraj_Ideal[1:,0] - lstTraj_Ideal[:-1,0])/dt,
-        (lstTraj_Ideal[1:,1] - lstTraj_Ideal[:-1,1])/dt]).T
+        (lstTraj[1:,0] - lstTraj[:-1,0])/dt,
+        (lstTraj[1:,1] - lstTraj[:-1,1])/dt]).T
     lstGrad = concatenate([array([[0, 0]]), lstGrad], axis=0)
-    lstTraj = tranGrad2Traj_MinSR(lstGrad, dt)
 
     return lstTraj, lstGrad
 
