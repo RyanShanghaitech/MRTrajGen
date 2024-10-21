@@ -130,7 +130,7 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
-def genCart(numPt:int|float, max:int|float=0.5) -> ndarray:
+def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
     """
     # description:
     generate cartesian sampling trajectory
@@ -142,9 +142,8 @@ def genCart(numPt:int|float, max:int|float=0.5) -> ndarray:
     # return:
     trajectory: [[x1, y1], [x2, y2], ..., [xn, yn]]
     """
-    # shape check
-    lstKx, lstKy = meshgrid(
-        linspace(-max, max, numPt, endpoint=False),
-        linspace(-max, max, numPt, endpoint=False))
-    return array([lstKx.flatten(), lstKy.flatten()]).T
+    tupLstK = meshgrid(
+        *[linspace(-max, max, numPt, endpoint=False) for _ in range(numDim)],
+        indexing="ij")
+    return array([lstK.flatten() for lstK in tupLstK]).T
     

@@ -9,11 +9,11 @@ gamma = 42.58e6
 dt = 10e-6
 sr = 100*gamma*(widFov/numPix) # Hz/pix/s
 flagVariableDensity = 0
-if flagVariableDensity:
-    turbo = 8 # variable density spiral
+if flagVariableDensity: # variable density spiral
+    turbo = 8
     evoRhoTht = 1 + 5e-2
-else:
-    turbo = 16 # homogeneous spiral
+else: # homogeneous spiral
+    turbo = 16
     evoRhoTht = 1
 kmax = 0.5 # /pix
 quoRhoTht = kmax/(2*pi)/(numPix/(2*turbo))
@@ -43,7 +43,9 @@ axis("equal"); title("kx-ky (/m)")
 
 subplot(132)
 plot(lstSR/gamma*(numPix/widFov), marker=".")
-ylim([0, 2*sr/gamma*(numPix/widFov)]); title("slew rate (T/m/s)")
+ylim([0.9*sr/gamma*(numPix/widFov), 1.1*sr/gamma*(numPix/widFov)])
+xlim([0, lstSR.size/5])
+title("slew rate (T/m/s)")
 
 subplot(133)
 plot(lstSR/gamma*(numPix/widFov), marker=".")
