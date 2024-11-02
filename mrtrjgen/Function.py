@@ -82,7 +82,7 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     `lstRho`: list of rho of spokes, in `/pix`
 
     # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
+    kspace trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]], in `/pix`
     """
     # shape check
     assert(size(lstTht.shape) == 1)
@@ -97,62 +97,36 @@ def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
 def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
     """
     # description:
-    generate cartesian sampling trajectory
+    generate Cartesian sampling trajectory
 
     # parameter:
     `numPt`: number of point in one dimension
     `max`: maximum coordinate value
 
     # return:
-    trajectory: [[x1, y1], [x2, y2], ..., [xn, yn]]
+    trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]]
     """
     tupLstK = meshgrid(
         *[linspace(-max, max, numPt, endpoint=False) for _ in range(numDim)],
         indexing="ij")
     return array([lstK.flatten() for lstK in tupLstK]).T
 
-def genSpiral3DTypeA(uTht:float|int, uPhi:float|int, tht0:float|int, phi0:float|int, sr:float|int, numPix:float|int, dt:float|int):
-    sovQDE = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
+def genSpiral3DTypeA(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float=10e-6, kmax:int|float=0.5) -> ndarray:
+    """
+    # description:
+    generate Spiral3D-TypeA trajectory
 
-    u_tht = uTht
-    u_phi = uPhi
-    Np = numPix
-    s = sr
+    # parmaeter:
+    `sr`: desired slewrate
+    `numPix`: matrix size of acquired image
+    `tht0`: initial phase of theata
+    `phi0`: initial phase of phi
+    `uTht`: undersamp ratio of theta
+    `uPhi`: undersamp ratio of phi
+    `dt`: temporal resolution of trajectory
+    `kmax`: maximum of k, typically 0.5
 
-    rho = (0.01*s)*dt*dt/2 # since solver of d1phi doesn't allow phi=0, we have to calculate the initial point
-    phi = (2*pi*Np/u_phi)*rho
-    tht = u_phi/(2*u_tht)*(phi**2)
-    
-    tht_d1 = 0
-        
-    lstKx = [0, rho*sin(tht + tht0)*cos(phi + phi0)]
-    lstKy = [0, rho*sin(tht + tht0)*sin(phi + phi0)]
-    lstKz = [0, rho*cos(tht + tht0)]
-
-    while rho <= 0.5:
-        a = (1/32)*u_tht*(8*tht**3*u_phi*(2*tht*u_phi + u_tht*math.cos(2*tht0 + 2*tht) + 3*u_tht) + 24*tht**2*u_phi**2 + 4*tht**2*u_tht**2*math.sin(tht0 + tht)**2 + 6*tht*u_phi*u_tht*math.sin(tht0 + tht)**2 + u_phi**2)/(Np**2*pi**2*tht**3*u_phi)
-        b = 0
-        c = -s**2
-    
-        tht_d1 = sovQDE(a,b,c)
-        tht += tht_d1*dt
-        
-        phi = sqrt(2*u_tht/u_phi)*sqrt(tht)
-        rho = u_phi/(2*pi*Np)*phi
-
-        kx = rho*sin(tht + tht0)*cos(phi + phi0)
-        ky = rho*sin(tht + tht0)*sin(phi + phi0)
-        kz = rho*cos(tht + tht0)
-
-        lstKx.append(kx)
-        lstKy.append(ky)
-        lstKz.append(kz)
-        
-    arrKx = array(lstKx)
-    arrKy = array(lstKy)
-    arrKz = array(lstKz)
-
-    return array([arrKx, arrKy, arrKz]).T
-
-def genSpiral3DTypeA_Cpp(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float, kmax:int|float) -> ndarray:
+    # return:
+    trajectory: [[kx1,ky1,kz1], [kx2,ky2,kz2], ..., [kxn,kyn,kzn]]
+    """
     return ext.GenSpiral3D(sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)

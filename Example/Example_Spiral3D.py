@@ -10,7 +10,7 @@ numPix = 128
 
 for idxTht in range(32):
     for idxPhi in range(32):
-        arrKxyz = mrtrjgen.genSpiral3DTypeA_Cpp(100*gamma*fov/numPix, numPix, 2*pi*idxTht/32, 2*pi*idxPhi/32, 32, 32, 10e-6, 0.5+2/128)
+        arrKxyz = mrtrjgen.genSpiral3DTypeA(100*gamma*fov/numPix, numPix, 2*pi*idxTht/32, 2*pi*idxPhi/32, 32, 32, 10e-6, 0.5+2/128)
         save(f"./Resource/arrKxyz_tht{idxTht:02d}_phi{idxPhi:02d}.npy", arrKxyz)
 
 figure()
