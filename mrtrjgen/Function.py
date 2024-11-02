@@ -1,46 +1,10 @@
 from numpy import *
 from typing import Callable
 from .Utility import tranGrad2Traj_MinSR
+from . import ext
+import math
 
-def genSpiral_DeltaK(getDeltaK:Callable, getDrhoDtht:Callable, phase:int|float=0, rhoMax:float|int=0.5) -> ndarray:
-    """
-    # description:
-    generate spiral sampling trajectory, subject to sampling interval
-
-    # parameter:
-    `getDeltaK`:Callable: function of sampling interval with respect to rho and theta, e.g. `lambda rho, tht: dNyq` for spiral with constant Nyquist sampling interval, in `/pix`
-    `getDrhoDtht`:Callable: function of dRho/dTheta with respect to rho and theta, e.g. `lambda rho, tht: b` for Archimedean spiral, `lambda rho, tht: rho + 1` for variable density spiral, in `/pix/rad`
-    `phase`: phase controlling rotation of spiral, in `rad`
-    `rhoMax`: maximum value of rho, in `/pix`
-
-    # return:
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
-    """
-    lstTht = array([0, 2*pi])
-    lstRho = array([0, getDeltaK(0, 0)])
-    while True:
-        dK = getDeltaK(lstRho[-1], lstTht[-1])
-        quoDrhoDtht = getDrhoDtht(lstRho[-1], lstTht[-1])
-        
-        dTht = dK/sqrt(quoDrhoDtht**2 + lstRho[-1]**2)
-        dRho = dTht*quoDrhoDtht
-        
-        # append new point
-        thtNew = lstTht[-1]+dTht
-        rhoNew = lstRho[-1]+dRho
-        if(rhoNew < rhoMax):
-            lstTht = append(lstTht, thtNew)
-            lstRho = append(lstRho, rhoNew)
-        else:
-            break
-
-    lstKx = lstRho*cos(lstTht + phase)
-    lstKy = lstRho*sin(lstTht + phase)
-    lstKxKy = array([lstKx, lstKy]).T
-
-    return lstKxKy
-
-def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, srlim:int|float, glim:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False) -> tuple[ndarray, ndarray]:
+def genSpiral(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, srlim:int|float, glim:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False) -> tuple[ndarray, ndarray]:
     '''
     # description
     generate spiral trajectory, subject to slew rate
@@ -60,7 +24,7 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
     kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
     gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `Hz/pix`
     '''
-    sovQDF = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
+    sovQDE = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
     lstTht = empty([0], dtype=float64)
     lstRho = empty([0], dtype=float64)
 
@@ -82,7 +46,7 @@ def genSpiral_Slewrate(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:C
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
         c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2
 
-        d2ThtTime = sovQDF(a, b, c)
+        d2ThtTime = sovQDE(a, b, c)
         d1ThtTime += d2ThtTime*(dt/oversamp)
         if d1ThtTime*dt*d0RhoTht > glim*dt: d1ThtTime = min(d1ThtTime, glim/d0RhoTht) # dk >= d1ThtTime*dt*d0RhoTht
         d0ThtTime += d1ThtTime*(dt/oversamp)
@@ -146,4 +110,49 @@ def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
         *[linspace(-max, max, numPt, endpoint=False) for _ in range(numDim)],
         indexing="ij")
     return array([lstK.flatten() for lstK in tupLstK]).T
+
+def genSpiral3DTypeA(uTht:float|int, uPhi:float|int, tht0:float|int, phi0:float|int, sr:float|int, numPix:float|int, dt:float|int):
+    sovQDE = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
+
+    u_tht = uTht
+    u_phi = uPhi
+    Np = numPix
+    s = sr
+
+    rho = (0.01*s)*dt*dt/2 # since solver of d1phi doesn't allow phi=0, we have to calculate the initial point
+    phi = (2*pi*Np/u_phi)*rho
+    tht = u_phi/(2*u_tht)*(phi**2)
     
+    tht_d1 = 0
+        
+    lstKx = [0, rho*sin(tht + tht0)*cos(phi + phi0)]
+    lstKy = [0, rho*sin(tht + tht0)*sin(phi + phi0)]
+    lstKz = [0, rho*cos(tht + tht0)]
+
+    while rho <= 0.5:
+        a = (1/32)*u_tht*(8*tht**3*u_phi*(2*tht*u_phi + u_tht*math.cos(2*tht0 + 2*tht) + 3*u_tht) + 24*tht**2*u_phi**2 + 4*tht**2*u_tht**2*math.sin(tht0 + tht)**2 + 6*tht*u_phi*u_tht*math.sin(tht0 + tht)**2 + u_phi**2)/(Np**2*pi**2*tht**3*u_phi)
+        b = 0
+        c = -s**2
+    
+        tht_d1 = sovQDE(a,b,c)
+        tht += tht_d1*dt
+        
+        phi = sqrt(2*u_tht/u_phi)*sqrt(tht)
+        rho = u_phi/(2*pi*Np)*phi
+
+        kx = rho*sin(tht + tht0)*cos(phi + phi0)
+        ky = rho*sin(tht + tht0)*sin(phi + phi0)
+        kz = rho*cos(tht + tht0)
+
+        lstKx.append(kx)
+        lstKy.append(ky)
+        lstKz.append(kz)
+        
+    arrKx = array(lstKx)
+    arrKy = array(lstKy)
+    arrKz = array(lstKz)
+
+    return array([arrKx, arrKy, arrKz]).T
+
+def genSpiral3DTypeA_Cpp(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float, kmax:int|float) -> ndarray:
+    return ext.GenSpiral3D(sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)
