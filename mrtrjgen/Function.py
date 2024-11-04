@@ -129,4 +129,24 @@ def genSpiral3DTypeA(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|fl
     # return:
     trajectory: [[kx1,ky1,kz1], [kx2,ky2,kz2], ..., [kxn,kyn,kzn]]
     """
-    return ext.GenSpiral3D(sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)
+    return ext.GenSpiral3D(0, sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)
+
+def genSpiral3DTypeB(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float=10e-6, kmax:int|float=0.5) -> ndarray:
+    """
+    # description:
+    generate Spiral3D-TypeB trajectory
+
+    # parmaeter:
+    `sr`: desired slewrate
+    `numPix`: matrix size of acquired image
+    `tht0`: initial phase of theata
+    `phi0`: initial phase of phi
+    `uTht`: undersamp ratio of theta
+    `uPhi`: undersamp ratio of phi
+    `dt`: temporal resolution of trajectory
+    `kmax`: maximum of k, typically 0.5
+
+    # return:
+    trajectory: [[kx1,ky1,kz1], [kx2,ky2,kz2], ..., [kxn,kyn,kzn]]
+    """
+    return ext.GenSpiral3D(1, sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)

@@ -9,7 +9,7 @@ numTht = 32; numPhi = 32
 for idxTht in range(numTht):
     print(f"idxTht={idxTht}")
     for idxPhi in range(numPhi):
-        arrKxyz = load(f"./Resource/arrKxyz_tht{idxTht:02d}_phi{idxPhi:02d}.npy")
+        arrKxyz = load(f"../Resource/arrKxyz_tht{idxTht:02d}_phi{idxPhi:02d}.npy")
         for k in arrKxyz:
             k = int64((k+0.5)*numPix + 0.5).clip(0, numPix-1)
             arrCart[k[2],k[1],k[0]] = 1

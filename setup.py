@@ -3,7 +3,13 @@ import numpy
 
 module = Extension(
     'mrtrjgen.ext', 
-    sources = ['./mrtrjgen/ext/main.cpp', './mrtrjgen/ext/Spiral3D.cpp'],
+    sources = 
+    [
+        './mrtrjgen/ext/main.cpp', 
+        './mrtrjgen/ext/Spiral3D_A.cpp', 
+        './mrtrjgen/ext/Spiral3D_B.cpp', 
+        './mrtrjgen/ext/Trajectory.cpp'
+    ],
     include_dirs = ["mrtrjgen/ext/", numpy.get_include()],
     language = 'c++'
     )

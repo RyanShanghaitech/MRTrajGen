@@ -1,7 +1,7 @@
 import sympy as sp
 
-useLaTeX = 1
-useCxx = 0
+useLaTeX = 0
+useCxx = 1
 
 def saveLatex(s):
     f = open("latex.md", "a")
@@ -9,20 +9,24 @@ def saveLatex(s):
     f.write(sp.latex(s) + "\n")
     f.write("$$\n")
 
+t = sp.Symbol(r"t")
 if useLaTeX:
     Np = sp.Symbol(r"N_p")
     pi = sp.Symbol(r"\pi")
-    t = sp.Symbol(r"t")
-    dt = sp.Symbol(r"\Delta t")
     u_phi = sp.Symbol(r"u_\phi") # undersamp ratio
     u_tht= sp.Symbol(r"u_\theta") # undersamp ratio
     phi0 = sp.Symbol(r"\phi_0")
     tht0 = sp.Symbol(r"\theta_0")
+elif useCxx:
+    Np = sp.Symbol(r"dNp")
+    pi = sp.Symbol(r"m_dPi")
+    u_phi = sp.Symbol(r"dUPhi") # undersamp ratio
+    u_tht= sp.Symbol(r"dUTht") # undersamp ratio
+    phi0 = sp.Symbol(r"dPhi0")
+    tht0 = sp.Symbol(r"dTht0")
 else:
     Np = sp.Symbol(r"Np")
     pi = sp.Symbol(r"pi")
-    t = sp.Symbol(r"t")
-    dt = sp.Symbol(r"dt")
     u_phi = sp.Symbol(r"u_phi") # undersamp ratio
     u_tht= sp.Symbol(r"u_tht") # undersamp ratio
     phi0 = sp.Symbol(r"phi0")
@@ -42,6 +46,10 @@ if useLaTeX:
     phi_d0 = sp.Symbol(r"\phi^{(0)}")
     phi_d1 = sp.Symbol(r"\phi^{(1)}")
     phi_d2 = sp.Symbol(r"\phi^{(2)}")
+if useCxx:
+    phi_d0 = sp.Symbol(r"dD0Phi")
+    phi_d1 = sp.Symbol(r"dD1Phi")
+    phi_d2 = sp.Symbol(r"dD2Phi")
 else:
     phi_d0 = sp.Symbol(r"phi_d0")
     phi_d1 = sp.Symbol(r"phi_d1")
@@ -55,7 +63,12 @@ s2 = s2.subs(
 )
 s2 = s2.expand().collect(phi_d1)
 
-s = sp.Symbol(r"s")
+if useLaTeX:
+    s = sp.Symbol(r"s")
+elif useCxx:
+    s = sp.Symbol(r"dS")
+else:
+    s = sp.Symbol(r"s")
 a = s2.coeff(phi_d1,4).simplify()
 b = s2.coeff(phi_d1,2).simplify()
 c = (s2.coeff(phi_d1,0) - s**2).simplify()
@@ -72,9 +85,9 @@ if useLaTeX:
     saveLatex(sp.Eq(sp.Symbol("c"), c.subs(dictRep)))
     saveLatex("")
 elif useCxx:
-    print("double a = ", sp.cxxcode(a), ";\n", sep="")
-    print("double b = ", sp.cxxcode(b), ";\n", sep="")
-    print("double c = ", sp.cxxcode(c), ";\n", sep="")
+    print("double dA = ", sp.cxxcode(a), ";", sep="")
+    print("double dB = ", sp.cxxcode(b), ";", sep="")
+    print("double dC = ", sp.cxxcode(c), ";", sep="")
 else:
     print("a = ", sp.pycode(a), sep="")
     print("b = ", sp.pycode(b), sep="")
