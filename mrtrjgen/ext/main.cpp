@@ -34,29 +34,45 @@ PyObject *GenSpiral3D(PyObject* self, PyObject* args)
     pTraj->Update(std::vector<double>({dS, dNp, dTht0, dPhi0, dUTht, dUPhi, dDt, dKmax}));
     std::vector<double> vdKx, vdKy, vdKz;
     pTraj->GetTraj(&vdKx, &vdKy, &vdKz);
+    std::vector<float> vdGx, vdGy, vdGz;
+    pTraj->GetGrad(&vdGx, &vdGy, &vdGz);
 
-    double *data = new double[pTraj->GetNpt()*3];
-    double *ptr = data;
-    memcpy(ptr, vdKx.data(), pTraj->GetNpt()*sizeof(double));
-    ptr += pTraj->GetNpt();
-    memcpy(ptr, vdKy.data(), pTraj->GetNpt()*sizeof(double));
-    ptr += pTraj->GetNpt();
-    memcpy(ptr, vdKz.data(), pTraj->GetNpt()*sizeof(double));
+    double *adTraj = new double[pTraj->GetNpt()*3];
+    float *adGrad = new float[pTraj->GetNpt()*3];
+    {
+        double *ptr = adTraj;
+        memcpy(ptr, vdKx.data(), pTraj->GetNpt()*sizeof(double));
+        ptr += pTraj->GetNpt();
+        memcpy(ptr, vdKy.data(), pTraj->GetNpt()*sizeof(double));
+        ptr += pTraj->GetNpt();
+        memcpy(ptr, vdKz.data(), pTraj->GetNpt()*sizeof(double));
+    }
+    {
+        float *ptr = adGrad;
+        memcpy(ptr, vdGx.data(), pTraj->GetNpt()*sizeof(float));
+        ptr += pTraj->GetNpt();
+        memcpy(ptr, vdGy.data(), pTraj->GetNpt()*sizeof(float));
+        ptr += pTraj->GetNpt();
+        memcpy(ptr, vdGz.data(), pTraj->GetNpt()*sizeof(float));
+    }
     
-    PyArrayObject *pyaTraj;
+    PyArrayObject *pyaTraj, *pyaGrad;
     {
         npy_intp dims[] = {3, pTraj->GetNpt()};
-        pyaTraj = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_FLOAT64, data);
+        pyaTraj = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_FLOAT64, adTraj);
         PyArray_ENABLEFLAGS(pyaTraj, NPY_ARRAY_OWNDATA);
+        pyaGrad = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, adGrad);
+        PyArray_ENABLEFLAGS(pyaGrad, NPY_ARRAY_OWNDATA);
     }
     {
         npy_intp dims[] = {1, 0};
         PyArray_Dims permute = {dims, 2};
         pyaTraj = (PyArrayObject*)PyArray_Transpose(pyaTraj, &permute);
+        pyaGrad = (PyArrayObject*)PyArray_Transpose(pyaGrad, &permute);
     }
 
     delete pTraj;
-    return (PyObject*)pyaTraj;
+    return Py_BuildValue("OO", pyaTraj, pyaGrad);
 }
 
 static PyMethodDef aMeth[] = {

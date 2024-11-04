@@ -20,6 +20,7 @@ double Spiral3D_B::SovD1Tht(double dS, double dNp, double dD0Tht, double dTht0, 
 
 void Spiral3D_B::Update(std::vector<double> vdPara)
 {
+    m_vdPara = vdPara;
     double dS, dNp, dTht0, dPhi0, dUTht, dUPhi, dDt, dKmax;
     double *adDst[] = {&dS, &dNp, &dTht0, &dPhi0, &dUTht, &dUPhi, &dDt, &dKmax};
     ExtractPara(vdPara, std::vector<double*>(adDst, adDst + sizeof(adDst)/sizeof(double*)));

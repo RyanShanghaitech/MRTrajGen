@@ -4,6 +4,7 @@
 #include <cstdio> // FILE
 #include <cstdint> // int64_t
 #include <cmath> // acos
+#include <string>
 
 #ifndef M_SQRT2
 #define M_SQRT2		1.41421356237309504880e0
@@ -26,6 +27,7 @@ public:
     void SaveGrad(FILE* pFile) const;
     static void AppendDown(std::vector<float> *pvfGrad, int64_t lNptDown);
     static void AppendZero(std::vector<float> *pvfGrad, int64_t lNptZero);
+    std::vector<double> m_vdPara;
 protected:
     std::vector<double> m_vdKx, m_vdKy, m_vdKz; // trajectory
     std::vector<double> m_vdGx, m_vdGy, m_vdGz; // gradient
