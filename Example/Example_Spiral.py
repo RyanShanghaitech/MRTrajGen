@@ -31,7 +31,7 @@ numCopy = turbo
 lstTraj = copyTraj(lstTraj, numCopy)
 
 print(f"lstTraj.shape = {lstTraj.shape}")
-save("./Resource/lstTraj.npy", lstTraj[:,1:,:])
+save("../Resource/lstTraj.npy", lstTraj[:,1:,:])
 
 # derive slew rate
 lstSR = tranGrad2Slewrate(lstGrad, dt)
