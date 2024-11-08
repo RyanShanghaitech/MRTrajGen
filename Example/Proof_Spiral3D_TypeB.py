@@ -1,7 +1,7 @@
 import sympy as sp
 
-useLaTeX = 0
-useCxx = 1
+useLaTeX = 1
+useCxx = 0
 
 def saveLatex(s):
     f = open("latex.md", "a")
