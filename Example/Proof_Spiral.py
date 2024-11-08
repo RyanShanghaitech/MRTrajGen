@@ -1,7 +1,7 @@
 from sympy import *
 
 def saveLatex(s:Symbol):
-    f = open("proof.md", "a")
+    f = open("latex.md", "a")
     f.write("$$\n")
     f.write(latex(s) + "\n")
     f.write("$$\n")

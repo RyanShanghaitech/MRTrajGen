@@ -41,8 +41,6 @@ ky = rho*sp.sin(tht + tht0)*sp.sin(phi + phi0)
 kz = rho*sp.cos(tht + tht0)
 
 s2 = kx.diff(t,2)**2 + ky.diff(t,2)**2 + kz.diff(t,2)**2
-saveLatex(sp.Eq(sp.Symbol("s^2"), s2.expand().collect(phi.diff(t,2))))
-exit()
 
 if useLaTeX:
     phi_d0 = sp.Symbol(r"\phi^{(0)}")

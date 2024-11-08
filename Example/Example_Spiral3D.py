@@ -1,9 +1,12 @@
 from numpy import *
 from matplotlib.pyplot import *
-from matplotlib import gridspec
 from mpl_toolkits.mplot3d import *
 
 import mrtrjgen
+
+# parameters
+genSpiral3D = mrtrjgen.genSpiral3DTypeA # proposed Spiral-3D
+# genSpiral3D = mrtrjgen.genSpiral3DTypeB # elementary approximation of Seiffert-Spiral
 
 sr = 100 # desired slew rate
 fov = 0.25
@@ -13,13 +16,14 @@ uPhi = 32
 dt = 10e-6
 gamma = 42.5756e6 # UIH
 
+# calculate trajectory
 lstArrKxyz = []
 lstArrGxyz = []
 lstArrS = []
 scale = 1/gamma*numPix/fov
 for idxTht in range(uTht):
     for idxPhi in range(uPhi):
-        arrKxyz, arrGxyz = mrtrjgen.genSpiral3DTypeA(sr*gamma*fov/numPix, numPix, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, uTht, uPhi, dt, 0.5)
+        arrKxyz, arrGxyz = genSpiral3D(sr*gamma*fov/numPix, numPix, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, uTht, uPhi, dt, 0.5)
         arrS = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dt
         lstArrKxyz.append(arrKxyz)
         lstArrGxyz.append(arrGxyz*scale)
