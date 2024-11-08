@@ -10,14 +10,13 @@ module = Extension(
         './mrtrjgen/ext/Spiral3D_B.cpp', 
         './mrtrjgen/ext/Trajectory.cpp'
     ],
-    include_dirs = ["mrtrjgen/ext/", numpy.get_include()],
+    include_dirs = ["./ext/", numpy.get_include()],
     language = 'c++'
     )
 
 setup(
-    name = 'mrtrjgen', 
-    py_modules = ["mrtrjgen"],
+    name = 'mrtrjgen',
     ext_modules = [module],
-    packages=["mrtrjgen"],
+    packages = ["mrtrjgen"],
     package_data={"mrtrjgen" : ["./ext/*.h"]}
     )

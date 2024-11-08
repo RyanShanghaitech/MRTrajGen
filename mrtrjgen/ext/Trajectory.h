@@ -33,6 +33,6 @@ protected:
     std::vector<double> m_vdGx, m_vdGy, m_vdGz; // gradient
     int64_t m_lNpt;
 
-    static double SovQDE(double dA, double dB, double dC);
+    static double SovQuadEq(double dA, double dB, double dC);
     static int64_t ExtractPara(std::vector<double> vdSrc, std::vector<double*> vpdDst);
 };

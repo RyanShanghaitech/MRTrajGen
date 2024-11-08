@@ -24,7 +24,7 @@ def genSpiral(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, 
     kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
     gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `Hz/pix`
     '''
-    sovQDE = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
+    SovQuadEq = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
     lstTht = empty([0], dtype=float64)
     lstRho = empty([0], dtype=float64)
 
@@ -46,7 +46,7 @@ def genSpiral(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, 
         b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
         c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2
 
-        d2ThtTime = sovQDE(a, b, c)
+        d2ThtTime = SovQuadEq(a, b, c)
         d1ThtTime += d2ThtTime*(dt/oversamp)
         if d1ThtTime*dt*d0RhoTht > glim*dt: d1ThtTime = min(d1ThtTime, glim/d0RhoTht) # dk >= d1ThtTime*dt*d0RhoTht
         d0ThtTime += d1ThtTime*(dt/oversamp)

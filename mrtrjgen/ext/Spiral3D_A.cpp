@@ -15,7 +15,7 @@ double Spiral3D_A::SovD1Phi(double dS, double dNp, double dD0Phi, double dTht0, 
     double dB = 0;
     double dC = -std::pow(dS, 2);
 
-    return sqrt(fabs(SovQDE(dA, dB, dC)));
+    return sqrt(fabs(SovQuadEq(dA, dB, dC)));
 }
 
 void Spiral3D_A::Update(std::vector<double> vdPara)

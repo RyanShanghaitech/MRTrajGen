@@ -82,7 +82,7 @@ void Trajectory::AppendZero(std::vector<float> *pvfGrad, int64_t lNptZero)
     std::fill(pvfGrad->begin()+lNptOld, pvfGrad->end(), 0e0f);
 }
 
-double Trajectory::SovQDE(double dA, double dB, double dC)
+double Trajectory::SovQuadEq(double dA, double dB, double dC)
 {
     double dDelta;
 
