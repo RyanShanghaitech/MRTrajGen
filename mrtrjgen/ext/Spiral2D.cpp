@@ -1,5 +1,4 @@
 #include "Spiral2D.h"
-#include <stdexcept>
 
 Spiral2D::Spiral2D() {}
 
@@ -60,9 +59,10 @@ void Spiral2D::Update(std::vector<double> *pvdPara)
     // copy to member variables
     m_vdKx.assign(ldKx.begin(), ldKx.end());
     m_vdKy.assign(ldKy.begin(), ldKy.end());
+    m_vdKz.clear();
 
     // update gradient vector
-    m_vdGx.resize(m_lNpt); m_vdGy.resize(m_lNpt);
+    m_vdGx.resize(m_lNpt); m_vdGy.resize(m_lNpt); m_vdGz.clear();
     m_vdGx[0] = 0e0; m_vdGy[0] = 0e0;
     for (int64_t lIdxPt = 1; lIdxPt < m_lNpt; ++lIdxPt)
     {

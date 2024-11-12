@@ -55,4 +55,4 @@ while 1:
         axGy.set_title("Gy (T/m)")
         axS.set_title("Slew Rate (T/m/s)")
         show(block=0)
-        pause(1e-7)
+        pause(1e-6)

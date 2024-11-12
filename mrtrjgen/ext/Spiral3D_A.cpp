@@ -48,10 +48,10 @@ void Spiral3D_A::Update(std::vector<double> *pvdPara)
     PUSHBACK_KXYZ();
 
     // k[1], since SovD1Phi() doesn't allow phi=0, we have to calculate k[1]
-    dRho = (0.01*dS)*dDt*dDt/2;
+    dRho = (1e-2*dS)*dDt*dDt/2;
     dTht = dRho*2*M_PI*dNp/dUTht;
     dPhi = (2*dRho*dRho*M_PI*M_PI*dNp*dNp)/(dUTht*dUPhi);
-    PUSHBACK_KXYZ();
+    // PUSHBACK_KXYZ();
 
     // k[2] ~ k[inf]
     double dD1Phi = 0;

@@ -24,8 +24,8 @@ public:
     void GetTraj(std::vector<double> *pvdKx, std::vector<double> *pvdKy, std::vector<double> *pvdKz, double dScale=1e0) const;
     void GetGrad(std::vector<float> *pvfGx, std::vector<float> *pvfGy, std::vector<float> *pvfGz, double dScale=1e0) const;
     int64_t GetNpt() const;
-    void SaveTraj(FILE *pFile) const;
-    void SaveGrad(FILE *pFile) const;
+    void SaveTraj(FILE* pfBin, FILE* pfHdr) const;
+    void SaveGrad(FILE* pfBin, FILE* pfHdr) const;
     static void AppendDown(std::vector<float> *pvfGrad, int64_t lNptDown);
     static void AppendZero(std::vector<float> *pvfGrad, int64_t lNptZero);
     std::vector<double> m_vdPara;

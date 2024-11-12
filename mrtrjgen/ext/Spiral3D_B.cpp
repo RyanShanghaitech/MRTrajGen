@@ -51,7 +51,7 @@ void Spiral3D_B::Update(std::vector<double> *pvdPara)
     dRho = (0.01*dS)*dDt*dDt/2;
     dPhi = (2*M_PI*dNp/dUPhi)*dRho;
     dTht = dUPhi/(2*dUTht)*(dPhi*dPhi);
-    PUSHBACK_KXYZ();
+    // PUSHBACK_KXYZ();
 
     // k[2] ~ k[inf]
     int64_t lIdxPt = 2;

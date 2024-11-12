@@ -40,21 +40,39 @@ int64_t Trajectory::GetNpt() const
     return m_lNpt;
 }
 
-void Trajectory::SaveTraj(FILE* pFile) const
+void Trajectory::SaveTraj(FILE* pfBin, FILE* pfHdr) const
 {
-    if (pFile == NULL) return;
-    for (int64_t lIdxPt = 0; lIdxPt < m_lNpt; ++lIdxPt)
+    // save binary file
+    if (pfBin != NULL)
     {
-        fprintf(pFile, "%.8e, %.8e, %.8e\n", m_vdKx[lIdxPt], m_vdKy[lIdxPt], m_vdKz[lIdxPt]);
+        fwrite(m_vdKx.data(), sizeof(double), m_vdKx.size(), pfBin);
+        fwrite(m_vdKy.data(), sizeof(double), m_vdKy.size(), pfBin);
+        fwrite(m_vdKz.data(), sizeof(double), m_vdKz.size(), pfBin);
+    }
+    // save header file
+    if (pfHdr != NULL)
+    {
+        fprintf(pfHdr, "double m_vdKx[%ld]\n", m_vdKx.size());
+        fprintf(pfHdr, "double m_vdKy[%ld]\n", m_vdKy.size());
+        fprintf(pfHdr, "double m_vdKz[%ld]\n", m_vdKz.size());
     }
 }
 
-void Trajectory::SaveGrad(FILE* pFile) const
+void Trajectory::SaveGrad(FILE* pfBin, FILE* pfHdr) const
 {
-    if (pFile == NULL) return;
-    for (int64_t lIdxPt = 0; lIdxPt < m_lNpt; ++lIdxPt)
+    // save binary file
+    if (pfBin != NULL)
     {
-        fprintf(pFile, "%.8e, %.8e, %.8e\n", m_vdGx[lIdxPt], m_vdGy[lIdxPt], m_vdGz[lIdxPt]);
+        fwrite(m_vdGx.data(), sizeof(double), m_vdGx.size(), pfBin);
+        fwrite(m_vdGy.data(), sizeof(double), m_vdGy.size(), pfBin);
+        fwrite(m_vdGz.data(), sizeof(double), m_vdGz.size(), pfBin);
+    }
+    // save header file
+    if (pfHdr != NULL)
+    {
+        fprintf(pfHdr, "double m_vdGx[%ld]\n", m_vdGx.size());
+        fprintf(pfHdr, "double m_vdGy[%ld]\n", m_vdGy.size());
+        fprintf(pfHdr, "double m_vdGz[%ld]\n", m_vdGz.size());
     }
 }
 

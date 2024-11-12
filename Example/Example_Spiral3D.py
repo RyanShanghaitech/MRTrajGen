@@ -5,8 +5,8 @@ from mpl_toolkits.mplot3d import *
 import mrtrjgen
 
 # parameters
-# genSpiral3D = mrtrjgen.genSpiral3DTypeA # proposed Spiral-3D
-genSpiral3D = mrtrjgen.genSpiral3DTypeB # elementary approximation of Seiffert-Spiral
+genSpiral3D = mrtrjgen.genSpiral3DTypeA # proposed Spiral-3D
+# genSpiral3D = mrtrjgen.genSpiral3DTypeB # elementary approximation of Seiffert-Spiral
 
 sr = 100 # desired slew rate
 fov = 0.25
@@ -21,8 +21,8 @@ lstArrKxyz = []
 lstArrGxyz = []
 lstArrSR = []
 scale = 1/gamma*numPix/fov
-for idxTht in range(uTht):
-    for idxPhi in range(uPhi):
+for idxPhi in range(uPhi):
+    for idxTht in range(uTht):
         arrKxyz, arrGxyz = genSpiral3D(numPix, uTht, uPhi, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, 0.5, sr*gamma*fov/numPix, dt)
         arrSR = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dt
         lstArrKxyz.append(arrKxyz)
@@ -66,4 +66,4 @@ for idxTR in range(uTht*uPhi):
     axGz.set_title("Gz (T/m)")
     axS.set_title("Slew Rate (T/m/s)")
     show(block=0)
-    pause(1e-7)
+    pause(1e-6)
