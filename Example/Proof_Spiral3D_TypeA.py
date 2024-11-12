@@ -1,95 +1,63 @@
 import sympy as sp
 
-useLaTeX = 1
-useCxx = 0
+filename = "result.md"
 
-def saveLatex(s):
-    f = open("latex.md", "a")
-    f.write("$$\n")
-    f.write(sp.latex(s) + "\n")
-    f.write("$$\n")
+def save_latex(s:sp.Equality):
+    with open(filename, "a") as f:
+        f.write("$$\n")
+        f.write(sp.latex(s) + "\n")
+        f.write("$$\n")
+
+def save_ccode(s:sp.Equality):
+    with open(filename, "a") as f:
+        f.write("```\n")
+        f.write(sp.ccode(s.lhs) + " = ")
+        f.write(sp.ccode(s.rhs) + ";\n")
+        f.write("```\n")
+
+# symbols and functions
+Np = sp.Symbol(r"N_p")
+u_phi = sp.Symbol(r"u_\phi") # undersamp ratio
+u_tht = sp.Symbol(r"u_\theta") # undersamp ratio
+phi0 = sp.Symbol(r"\phi_0")
+tht0 = sp.Symbol(r"\theta_0")
 
 t = sp.Symbol(r"t")
-if useLaTeX:
-    Np = sp.Symbol(r"N_p")
-    pi = sp.Symbol(r"\pi")
-    u_phi = sp.Symbol(r"u_\phi") # undersamp ratio
-    u_tht= sp.Symbol(r"u_\theta") # undersamp ratio
-    phi0 = sp.Symbol(r"\phi_0")
-    tht0 = sp.Symbol(r"\theta_0")
-elif useCxx:
-    Np = sp.Symbol(r"dNp")
-    pi = sp.Symbol(r"m_dPi")
-    u_phi = sp.Symbol(r"dUPhi") # undersamp ratio
-    u_tht= sp.Symbol(r"dUTht") # undersamp ratio
-    phi0 = sp.Symbol(r"dPhi0")
-    tht0 = sp.Symbol(r"dTht0")
-else:
-    Np = sp.Symbol(r"Np")
-    pi = sp.Symbol(r"pi")
-    u_phi = sp.Symbol(r"u_phi") # undersamp ratio
-    u_tht= sp.Symbol(r"u_tht") # undersamp ratio
-    phi0 = sp.Symbol(r"phi0")
-    tht0 = sp.Symbol(r"tht0")
-
 phi = sp.Function(r"\phi")(t)
 tht = sp.sqrt((2*u_phi)/(u_tht))*sp.sqrt(phi)
-rho = sp.sqrt(u_tht*u_phi/2)/(pi*Np)*sp.sqrt(phi)
+rho = sp.sqrt(u_tht*u_phi/2)/(sp.pi*Np)*sp.sqrt(phi)
 
+# kx, ky, kz
 kx = rho*sp.sin(tht + tht0)*sp.cos(phi + phi0)
 ky = rho*sp.sin(tht + tht0)*sp.sin(phi + phi0)
 kz = rho*sp.cos(tht + tht0)
 
+# slew rate
 s2 = kx.diff(t,2)**2 + ky.diff(t,2)**2 + kz.diff(t,2)**2
 
-if useLaTeX:
-    phi_d0 = sp.Symbol(r"\phi^{(0)}")
-    phi_d1 = sp.Symbol(r"\phi^{(1)}")
-    phi_d2 = sp.Symbol(r"\phi^{(2)}")
-if useCxx:
-    phi_d0 = sp.Symbol(r"dD0Phi")
-    phi_d1 = sp.Symbol(r"dD1Phi")
-    phi_d2 = sp.Symbol(r"dD2Phi")
-else:
-    phi_d0 = sp.Symbol(r"phi_d0")
-    phi_d1 = sp.Symbol(r"phi_d1")
-    phi_d2 = sp.Symbol(r"phi_d2")
-s2 = s2.subs(
-    {
-        phi:phi_d0,
-        phi.diff(t,1):phi_d1,
-        phi.diff(t,2):0, # phi_d2,
-    },
-)
-s2 = s2.expand().collect(phi_d1)
+s2 = s2.subs({phi.diff(t,2): 0})
+s2 = s2.expand().collect(phi.diff(t,1))
 
-if useLaTeX:
-    s = sp.Symbol(r"s")
-elif useCxx:
-    s = sp.Symbol(r"dS")
-else:
-    s = sp.Symbol(r"s")
-a = s2.coeff(phi_d1,4).simplify()
-b = s2.coeff(phi_d1,2).simplify()
-c = (s2.coeff(phi_d1,0) - s**2).simplify()
+# clear file
+open(filename, "w").close()
 
-if useLaTeX:
-    dictRep = {
-        phi_d0:sp.Symbol(r"\textcolor{cyan}{\phi^{(0)}}"),
-        phi_d1:sp.Symbol(r"\textcolor{cyan}{\phi^{(1)}}"),
-        phi_d2:sp.Symbol(r"\textcolor{cyan}{\phi^{(2)}}"),
-    }
-    saveLatex(sp.Eq(sp.Symbol("s^2"), s2.subs(dictRep)))
-    saveLatex(sp.Eq(sp.Symbol("a"), a.subs(dictRep)))
-    saveLatex(sp.Eq(sp.Symbol("b"), b.subs(dictRep)))
-    saveLatex(sp.Eq(sp.Symbol("c"), c.subs(dictRep)))
-    saveLatex("")
-elif useCxx:
-    print("double dA = ", sp.cxxcode(a), ";", sep="")
-    print("double dB = ", sp.cxxcode(b), ";", sep="")
-    print("double dC = ", sp.cxxcode(c), ";", sep="")
-else:
-    print("a = ", sp.pycode(a), sep="")
-    print("b = ", sp.pycode(b), sep="")
-    print("c = ", sp.pycode(c), sep="")
-    
+# save latex code
+dictRep = {
+    phi.diff(t,0): sp.Symbol(r'\textcolor{cyan}{\phi_t^{(0)}}'),
+    phi.diff(t,1): sp.Symbol(r'\textcolor{cyan}{\phi_t^{(1)}}'),
+}
+save_latex(sp.Eq(sp.Symbol("s")**2, s2.subs(dictRep)))
+
+# save c code
+dictRep = {
+    Np: sp.Symbol(r'dNp'),
+    u_phi: sp.Symbol(r'dUPhi'),
+    u_tht: sp.Symbol(r'dUTht'),
+    phi0: sp.Symbol(r'dPhi0'),
+    tht0: sp.Symbol(r'dTht0'),
+    phi.diff(t,0): sp.Symbol(r'dD0Phi'),
+    phi.diff(t,1): sp.Symbol(r'dD1Phi'),
+}
+save_ccode(sp.Eq(sp.Symbol("double dA"), s2.coeff(phi.diff(t,1),4).subs(dictRep)).simplify())
+save_ccode(sp.Eq(sp.Symbol("double dB"), s2.coeff(phi.diff(t,1),2).subs(dictRep)).simplify())
+save_ccode(sp.Eq(sp.Symbol("double dC"), s2.coeff(phi.diff(t,1),0).subs(dictRep)-sp.Symbol("dS")**2).simplify())

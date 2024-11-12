@@ -11,36 +11,47 @@ Spiral3D_B& Spiral3D_B::operator=(Spiral3D_B &o)
 
 double Spiral3D_B::SovD1Tht(double dS, double dNp, double dD0Tht, double dTht0, double dPhi0, double dUTht, double dUPhi)
 {
-    double dA = (1.0/32.0)*dUTht*(8*std::pow(dD0Tht, 3)*dUPhi*(2*dD0Tht*dUPhi + dUTht*std::cos(2*dD0Tht + 2*dTht0) + 3*dUTht) + 24*std::pow(dD0Tht, 2)*std::pow(dUPhi, 2) + 4*std::pow(dD0Tht, 2)*std::pow(dUTht, 2)*std::pow(std::sin(dD0Tht + dTht0), 2) + 6*dD0Tht*dUPhi*dUTht*std::pow(std::sin(dD0Tht + dTht0), 2) + std::pow(dUPhi, 2))/(std::pow(dD0Tht, 3)*std::pow(dNp, 2)*dUPhi*std::pow(M_PI, 2));
+    double dA = (1.0/32.0)*dUTht*(8*pow(dD0Tht, 3)*dUPhi*(2*dD0Tht*dUPhi + dUTht*cos(2*dD0Tht + 2*dTht0) + 3*dUTht) + 24*pow(dD0Tht, 2)*pow(dUPhi, 2) + 4*pow(dD0Tht, 2)*pow(dUTht, 2)*pow(sin(dD0Tht + dTht0), 2) + 6*dD0Tht*dUPhi*dUTht*pow(sin(dD0Tht + dTht0), 2) + pow(dUPhi, 2))/(pow(M_PI, 2)*pow(dD0Tht, 3)*pow(dNp, 2)*dUPhi);
     double dB = 0;
-    double dC = -std::pow(dS, 2);
+    double dC = -pow(dS, 2);
 
     return sqrt(fabs(SovQuadEq(dA, dB, dC)));
 }
 
-void Spiral3D_B::Update(std::vector<double> vdPara)
+void Spiral3D_B::Update(std::vector<double> *pvdPara)
 {
-    m_vdPara = vdPara;
-    double dS, dNp, dTht0, dPhi0, dUTht, dUPhi, dDt, dKmax;
-    double *adDst[] = {&dS, &dNp, &dTht0, &dPhi0, &dUTht, &dUPhi, &dDt, &dKmax};
-    ExtractPara(vdPara, std::vector<double*>(adDst, adDst + sizeof(adDst)/sizeof(double*)));
+    double dNp, dUTht, dUPhi, dTht0, dPhi0, dKmax, dS, dDt;
+    std::list<double*> ldParaDst(0);
+    ldParaDst.push_back(&dNp);
+    ldParaDst.push_back(&dUTht);
+    ldParaDst.push_back(&dUPhi);
+    ldParaDst.push_back(&dTht0);
+    ldParaDst.push_back(&dPhi0);
+    ldParaDst.push_back(&dKmax);
+    ldParaDst.push_back(&dS);
+    ldParaDst.push_back(&dDt);
+    std::vector<double*> vdParaDst(ldParaDst.begin(), ldParaDst.end());
+    ExtractPara(pvdPara, &vdParaDst);
+
     std::list<double> ldKx, ldKy, ldKz;
+#define PUSHBACK_KXYZ() \
+    {\
+        ldKx.push_back(dRho*sin(dTht + dTht0)*cos(dPhi + dPhi0));\
+        ldKy.push_back(dRho*sin(dTht + dTht0)*sin(dPhi + dPhi0));\
+        ldKz.push_back(dRho*cos(dTht + dTht0));\
+    }
 
     // k[0]
     double dRho = 0;
     double dTht = 0;
     double dPhi = 0;
-    ldKx.push_back(dRho*sin(dTht + dTht0)*cos(dPhi + dPhi0));
-    ldKy.push_back(dRho*sin(dTht + dTht0)*sin(dPhi + dPhi0));
-    ldKz.push_back(dRho*cos(dTht + dTht0));
+    PUSHBACK_KXYZ();
 
-    // k[1], since SovD1Phi() doesn't allow phi=0, we have to calculate k[1]
+    // k[1], since SovD1Tht() doesn't allow tht=0, we have to calculate k[1]
     dRho = (0.01*dS)*dDt*dDt/2;
     dPhi = (2*M_PI*dNp/dUPhi)*dRho;
     dTht = dUPhi/(2*dUTht)*(dPhi*dPhi);
-    ldKx.push_back(dRho*sin(dTht + dTht0)*cos(dPhi + dPhi0));
-    ldKy.push_back(dRho*sin(dTht + dTht0)*sin(dPhi + dPhi0));
-    ldKz.push_back(dRho*cos(dTht + dTht0));
+    PUSHBACK_KXYZ();
 
     // k[2] ~ k[inf]
     int64_t lIdxPt = 2;
@@ -53,16 +64,14 @@ void Spiral3D_B::Update(std::vector<double> vdPara)
         dPhi = sqrt((2*dUTht)/(dUPhi))*sqrt(dTht);
         dRho = dUPhi/(2*M_PI*dNp)*dPhi;
 
-        ldKx.push_back(dRho*sin(dTht + dTht0)*cos(dPhi + dPhi0));
-        ldKy.push_back(dRho*sin(dTht + dTht0)*sin(dPhi + dPhi0));
-        ldKz.push_back(dRho*cos(dTht + dTht0));
+        PUSHBACK_KXYZ();
 
         ++lIdxPt;
     }
-    m_lNpt = lIdxPt;
+#undef PUSHBACK_KXYZ
+    m_lNpt = ldKx.size();
     
     // copy to member variables
-    m_vdKx.resize(m_lNpt); m_vdKy.resize(m_lNpt); m_vdKz.resize(m_lNpt);
     m_vdKx.assign(ldKx.begin(), ldKx.end());
     m_vdKy.assign(ldKy.begin(), ldKy.end());
     m_vdKz.assign(ldKz.begin(), ldKz.end());

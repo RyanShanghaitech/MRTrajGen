@@ -17,24 +17,20 @@ def save_ccode(s:sp.Equality):
 
 # symbols and functions
 Np = sp.Symbol(r"N_p")
-u_phi = sp.Symbol(r"u_\phi") # undersamp ratio
-u_tht = sp.Symbol(r"u_\theta") # undersamp ratio
-phi0 = sp.Symbol(r"\phi_0")
+u = sp.Symbol(r"u") # undersamp ratio
 tht0 = sp.Symbol(r"\theta_0")
 
-t = sp.Symbol(r"t")
-tht = sp.Function(r"\theta")(t)
-phi = sp.sqrt(2*u_tht/u_phi)*sp.sqrt(tht)
-rho = u_phi/(2*sp.pi*Np)*phi
+t = sp.Symbol(r't')
+tht = sp.Function(r'\theta')(t)
+rho = (0.5)/(2*sp.pi)*(u)/(Np/2)*tht
 
-# kx, ky, kz
-kx = rho*sp.sin(tht + tht0)*sp.cos(phi + phi0)
-ky = rho*sp.sin(tht + tht0)*sp.sin(phi + phi0)
-kz = rho*sp.cos(tht + tht0)
+# definition of kx and ky
+kx = rho*sp.cos(tht + tht0)
+ky = rho*sp.sin(tht + tht0)
 
 # slew rate
-s2 = kx.diff(t,2)**2 + ky.diff(t,2)**2 + kz.diff(t,2)**2
-
+s2 = kx.diff(t, 2)**2 + ky.diff(t, 2)**2
+ 
 s2 = s2.subs({tht.diff(t,2): 0})
 s2 = s2.expand().collect(tht.diff(t,1))
 
@@ -51,10 +47,7 @@ save_latex(sp.Eq(sp.Symbol("s")**2, s2.subs(dictRep)))
 # save c code
 dictRep = {
     Np: sp.Symbol(r'dNp'),
-    u_phi: sp.Symbol(r'dUPhi'),
-    u_tht: sp.Symbol(r'dUTht'),
-    phi0: sp.Symbol(r'dPhi0'),
-    tht0: sp.Symbol(r'dTht0'),
+    u: sp.Symbol(r'dU'),
     tht.diff(t,0): sp.Symbol(r'dD0Tht'),
     tht.diff(t,1): sp.Symbol(r'dD1Tht'),
 }

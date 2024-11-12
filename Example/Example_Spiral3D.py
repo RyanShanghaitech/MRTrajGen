@@ -5,8 +5,8 @@ from mpl_toolkits.mplot3d import *
 import mrtrjgen
 
 # parameters
-genSpiral3D = mrtrjgen.genSpiral3DTypeA # proposed Spiral-3D
-# genSpiral3D = mrtrjgen.genSpiral3DTypeB # elementary approximation of Seiffert-Spiral
+# genSpiral3D = mrtrjgen.genSpiral3DTypeA # proposed Spiral-3D
+genSpiral3D = mrtrjgen.genSpiral3DTypeB # elementary approximation of Seiffert-Spiral
 
 sr = 100 # desired slew rate
 fov = 0.25
@@ -19,15 +19,15 @@ gamma = 42.5756e6 # UIH
 # calculate trajectory
 lstArrKxyz = []
 lstArrGxyz = []
-lstArrS = []
+lstArrSR = []
 scale = 1/gamma*numPix/fov
 for idxTht in range(uTht):
     for idxPhi in range(uPhi):
-        arrKxyz, arrGxyz = genSpiral3D(sr*gamma*fov/numPix, numPix, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, uTht, uPhi, dt, 0.5)
-        arrS = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dt
+        arrKxyz, arrGxyz = genSpiral3D(numPix, uTht, uPhi, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, 0.5, sr*gamma*fov/numPix, dt)
+        arrSR = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dt
         lstArrKxyz.append(arrKxyz)
         lstArrGxyz.append(arrGxyz*scale)
-        lstArrS.append(asarray(sqrt((arrS**2).sum(axis=-1)))*scale)
+        lstArrSR.append(asarray(sqrt((arrSR**2).sum(axis=-1)))*scale)
 
 # plot
 markersize = 2
@@ -52,7 +52,7 @@ for idxTR in range(uTht*uPhi):
     axGx.plot(lstArrGxyz[idxTR][:,0], ".-", markersize=markersize, linewidth=linewidth)
     axGy.plot(lstArrGxyz[idxTR][:,1], ".-", markersize=markersize, linewidth=linewidth)
     axGz.plot(lstArrGxyz[idxTR][:,2], ".-", markersize=markersize, linewidth=linewidth)
-    axS.plot(lstArrS[idxTR][:], ".-", markersize=markersize, linewidth=linewidth)
+    axS.plot(lstArrSR[idxTR][:], ".-", markersize=markersize, linewidth=linewidth)
     axKxyz.set_xlim([-0.5,0.5])
     axKxyz.set_ylim([-0.5,0.5])
     axKxyz.set_zlim([-0.5,0.5])
@@ -65,5 +65,5 @@ for idxTR in range(uTht*uPhi):
     axGy.set_title("Gy (T/m)")
     axGz.set_title("Gz (T/m)")
     axS.set_title("Slew Rate (T/m/s)")
-    draw()
+    show(block=0)
     pause(1e-7)

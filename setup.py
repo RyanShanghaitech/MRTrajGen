@@ -6,6 +6,7 @@ module = Extension(
     sources = 
     [
         './mrtrjgen/ext/main.cpp', 
+        './mrtrjgen/ext/Spiral2D.cpp', 
         './mrtrjgen/ext/Spiral3D_A.cpp', 
         './mrtrjgen/ext/Spiral3D_B.cpp', 
         './mrtrjgen/ext/Trajectory.cpp'

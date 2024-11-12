@@ -2,7 +2,7 @@ from numpy import *
 from matplotlib.pyplot import *
 from mrtrjgen import *
 
-sizImg = 16
+sizImg = 128
 
 # generate trajectory of radial
 trjRadial = genRadial(linspace(0, 2*pi, int64(sizImg*pi/1)), linspace(0, 0.5, sizImg//2)) # derive trajectory

@@ -4,74 +4,6 @@ from .Utility import tranGrad2Traj_MinSR
 from . import ext
 import math
 
-def genSpiral(getD0RhoTht:Callable, getD1RhoTht:Callable, getD2RhoTht:Callable, srlim:int|float, glim:int|float, dt:int|float, kmax:int|float, oversamp:int=2, flagDebugInfo:bool=False) -> tuple[ndarray, ndarray]:
-    '''
-    # description
-    generate spiral trajectory, subject to slew rate
-
-    # parameter
-    `getD0RhoTht`: function of 0th order derivation of rho with respect to theta, in `/pix`
-    `getD1RhoTht`: function of 1st order derivation of rho with respect to theta, in `/pix/rad`
-    `getD2RhoTht`: function of 2nd order derivation of rho with respect to theta, in `/pix/rad^2`
-    `srlim`: slew rate limit, in `Hz/pix/s`
-    `grad`: gradient limit, in `Hz/pix`
-    `dt`: time between 2 adjacent points, in `s`
-    `kmax`: maximum value of k, in `/pix`, typically `0.5`
-    `oversamp`: oversampling ratio when solving numerial equation
-    `flagDebugInfo`: whether print debug info
-
-    # return
-    kspace trajectory: [[kx1, ky1], [kx2, ky2], ..., [kxn, kyn]], in `/pix`
-    gradient list: [[gx1, gy1], [gx2, gy2], ..., [gxn, gyn]], in `Hz/pix`
-    '''
-    SovQuadEq = lambda a, b, c: (-b+sqrt(max(b**2-4*a*c, 0)))/(2*a)
-    lstTht = empty([0], dtype=float64)
-    lstRho = empty([0], dtype=float64)
-
-    d0ThtTime = 0
-    d1ThtTime = 0
-    d2ThtTime = 0
-    d0RhoTht = getD0RhoTht(d0ThtTime) # ; assert(d0RhoTht == 0)
-    d1RhoTht = getD1RhoTht(d0ThtTime)
-    d2RhoTht = getD2RhoTht(d0ThtTime)
-
-    lstTht = append(lstTht, d0ThtTime)
-    lstRho = append(lstRho, d0RhoTht)
-    idxPt = 1
-
-    while d0RhoTht < kmax:
-        sr = srlim*(1 - exp(-idxPt/oversamp))
-        
-        a = d0RhoTht**2 + d1RhoTht**2
-        b = 2*d0RhoTht*d1RhoTht*d1ThtTime**2 + 2*d1RhoTht*d2RhoTht*d1ThtTime**2
-        c = d0RhoTht**2*d1ThtTime**4 - 2*d0RhoTht*d2RhoTht*d1ThtTime**4 + 4*d1RhoTht**2*d1ThtTime**4 + d2RhoTht**2*d1ThtTime**4 - sr**2
-
-        d2ThtTime = SovQuadEq(a, b, c)
-        d1ThtTime += d2ThtTime*(dt/oversamp)
-        if d1ThtTime*dt*d0RhoTht > glim*dt: d1ThtTime = min(d1ThtTime, glim/d0RhoTht) # dk >= d1ThtTime*dt*d0RhoTht
-        d0ThtTime += d1ThtTime*(dt/oversamp)
-        d0RhoTht = getD0RhoTht(d0ThtTime)
-        d1RhoTht = getD1RhoTht(d0ThtTime)
-        d2RhoTht = getD2RhoTht(d0ThtTime)
-
-        lstTht = append(lstTht, d0ThtTime)
-        lstRho = append(lstRho, d0RhoTht)
-        idxPt += 1
-
-        if flagDebugInfo and lstRho.size%1000 == 0: print(f"rho = {d0RhoTht:.2f}/{kmax:.2f}")
-
-    lstRho = lstRho[::oversamp]
-    lstTht = lstTht[::oversamp]
-    lstTraj = array([
-        lstRho*cos(lstTht),
-        lstRho*sin(lstTht)]).T
-    lstGrad = array([
-        (lstTraj[1:,0] - lstTraj[:-1,0])/dt,
-        (lstTraj[1:,1] - lstTraj[:-1,1])/dt]).T
-    lstGrad = concatenate([array([[0, 0]]), lstGrad], axis=0)
-
-    return lstTraj, lstGrad
-
 def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
     """
     # description:
@@ -111,42 +43,66 @@ def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
         indexing="ij")
     return array([lstK.flatten() for lstK in tupLstK]).T
 
-def genSpiral3DTypeA(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float=10e-6, kmax:int|float=0.5) -> ndarray:
+def genSpiral2D(numPix:int|float, u:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> ndarray:
     """
     # description:
     generate Spiral3D-TypeA trajectory
 
     # parmaeter:
-    `sr`: desired slewrate
     `numPix`: matrix size of acquired image
+    `u`: undersamp ratio
     `tht0`: initial phase of theata
-    `phi0`: initial phase of phi
-    `uTht`: undersamp ratio of theta
-    `uPhi`: undersamp ratio of phi
-    `dt`: temporal resolution of trajectory
     `kmax`: maximum of k, typically 0.5
+    `sr`: desired slewrate
+    `dt`: temporal resolution of trajectory
+    `ov`: oversampling factor when recur
 
     # return:
-    trajectory: [[kx1,ky1,kz1], [kx2,ky2,kz2], ..., [kxn,kyn,kzn]]
+    trajectory: [[kx0,ky0], [kx1,ky1], ..., [kxn,kyn]]
+    gradient: [[gx0,gy0], [gx1,gy1], ..., [gxn,gyn]]
     """
-    return ext.GenSpiral3D(0, sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)
+    return ext.GenSpiral2D(numPix, u, tht0, kmax, sr, dt, ov)
 
-def genSpiral3DTypeB(sr:int|float, numPix:int|float, tht0:int|float, phi0:int|float, uTht:int|float, uPhi:int|float, dt:int|float=10e-6, kmax:int|float=0.5) -> ndarray:
+def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> ndarray:
+    """
+    # description:
+    generate Spiral3D-TypeA trajectory
+
+    # parmaeter:
+    `numPix`: matrix size of acquired image
+    `uTht`: undersamp ratio of theta
+    `uPhi`: undersamp ratio of phi
+    `tht0`: initial phase of theata
+    `phi0`: initial phase of phi
+    `kmax`: maximum of k, typically 0.5
+    `sr`: desired slewrate
+    `dt`: temporal resolution of trajectory
+    `ov`: oversampling factor when recur
+
+    # return:
+    trajectory: [[kx0,ky0,kz0], [kx1,ky1,kz1], ..., [kxn,kyn,kzn]]
+    gradient: [[gx0,gy0,gz0], [gx1,gy1,gz1], ..., [gxn,gyn,gzn]]
+    """
+    return ext.GenSpiral3D_A(numPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
+
+def genSpiral3DTypeB(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> ndarray:
     """
     # description:
     generate Spiral3D-TypeB trajectory
 
     # parmaeter:
-    `sr`: desired slewrate
     `numPix`: matrix size of acquired image
-    `tht0`: initial phase of theata
-    `phi0`: initial phase of phi
     `uTht`: undersamp ratio of theta
     `uPhi`: undersamp ratio of phi
-    `dt`: temporal resolution of trajectory
+    `tht0`: initial phase of theata
+    `phi0`: initial phase of phi
     `kmax`: maximum of k, typically 0.5
+    `sr`: desired slewrate
+    `dt`: temporal resolution of trajectory
+    `ov`: oversampling factor when recur
 
     # return:
-    trajectory: [[kx1,ky1,kz1], [kx2,ky2,kz2], ..., [kxn,kyn,kzn]]
+    trajectory: [[kx0,ky0,kz0], [kx1,ky1,kz1], ..., [kxn,kyn,kzn]]
+    gradient: [[gx0,gy0,gz0], [gx1,gy1,gz1], ..., [gxn,gyn,gzn]]
     """
-    return ext.GenSpiral3D(1, sr, numPix, tht0, phi0, uTht, uPhi, dt, kmax)
+    return ext.GenSpiral3D_B(numPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
