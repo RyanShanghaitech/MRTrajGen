@@ -178,7 +178,7 @@ def copyTraj(traj:ndarray, numCopy:int, intv:int|float=None):
         trjNew[idxCopy,:,1] = sin(intv*idxCopy)*traj[:,0] + cos(intv*idxCopy)*traj[:,1]
     return trjNew
 
-def intpTraj(arrGx:ndarray, arrGy:ndarray, arrGz:ndarray, dtGrad:int|float, dtADC:int|float):
+def intpTraj(arrGx:ndarray, arrGy:ndarray, arrGz:ndarray, dtGrad:int|float, dtADC:int|float) -> tuple[ndarray,ndarray]:
     """
     # description:
     interpolate gradient waveform and derive trajectory
@@ -188,7 +188,7 @@ def intpTraj(arrGx:ndarray, arrGy:ndarray, arrGz:ndarray, dtGrad:int|float, dtAD
     `dtGrad`, `dtADC`: temporal resolution of gradient waveform and ADC
 
     # return:
-    interpolated trajectory
+    interpolated trajectory and gradient
     """
     numGrad = arrGx.size
     numADC = (dtGrad/dtADC)*(numGrad - 1)
@@ -207,4 +207,4 @@ def intpTraj(arrGx:ndarray, arrGy:ndarray, arrGz:ndarray, dtGrad:int|float, dtAD
     arrKx = cumsum(arrDkx)
     arrKy = cumsum(arrDky)
     arrKz = cumsum(arrDkz)
-    return arrKx, arrKy, arrKz
+    return array([arrKx,arrKy,arrKz]), array([arrGxResamp,arrGyResamp,arrGzResamp])

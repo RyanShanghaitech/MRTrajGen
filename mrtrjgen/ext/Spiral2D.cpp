@@ -9,20 +9,8 @@ Spiral2D& Spiral2D::operator=(Spiral2D &o)
 	return *this;
 }
 
-void Spiral2D::Update(std::vector<double> *pvdPara)
+void Spiral2D::Update(double dKtht1, double dKtht2, double dTht0, double dKmax, double dS, double dDt, double dOv)
 {
-    double dNp, dU, dTht0, dKmax, dS, dDt, dOv;
-    std::list<double*> lpdPtrPara(0);
-    lpdPtrPara.push_back(&dNp);
-    lpdPtrPara.push_back(&dU);
-    lpdPtrPara.push_back(&dTht0);
-    lpdPtrPara.push_back(&dKmax);
-    lpdPtrPara.push_back(&dS);
-    lpdPtrPara.push_back(&dDt);
-    lpdPtrPara.push_back(&dOv);
-    std::vector<double*> vpdPtrPara = std::vector<double*>(lpdPtrPara.begin(), lpdPtrPara.end());
-    ExtractPara(pvdPara, &vpdPtrPara);
-
     std::list<double> ldKx(0), ldKy(0);
     double dDtOv = dDt/dOv;
     int64_t lCntOv = 0;
@@ -37,19 +25,14 @@ void Spiral2D::Update(std::vector<double> *pvdPara)
     double dTht = 0;
     PUSHBACK_KXY(); lCntOv = 0;
 
-    // k[1]
-    dRho = dS*dDtOv*dDtOv;
-    dTht = (2e0*M_PI)/(0.5e0)*(dNp/2e0)/(dU)*dRho;
-    if (++lCntOv == round(dOv)) {PUSHBACK_KXY(); lCntOv = 0;}
-
-    // k[2] ~ k[inf]
-    double dD1Tht = dTht/dDtOv, dD2Tht = 0;
+    // k[1] ~ k[inf]
+    double dD1Tht = 0, dD2Tht = 0;
     while (dRho < dKmax)
     {
-        dD2Tht = SovD2Tht(dTht, dD1Tht, dNp, dU, dS);
+        dD2Tht = SovD2Tht(dTht, dD1Tht, dKtht1, dKtht2, dS);
         dD1Tht += dD2Tht*dDtOv;
         dTht += dD1Tht*dDtOv;
-        dRho += (0.5e0)/(2e0*M_PI)*(dU)/(dNp/2e0)*dD1Tht*dDtOv;
+        dRho = dKtht1*dTht + dKtht2*dTht*dTht;
 
         if (++lCntOv == round(dOv)) {PUSHBACK_KXY(); lCntOv = 0;}
     }
@@ -71,11 +54,14 @@ void Spiral2D::Update(std::vector<double> *pvdPara)
     }
 }
 
-double Spiral2D::SovD2Tht(double dD0Tht, double dD1Tht, double dNp, double dU, double dS)
+double Spiral2D::SovD2Tht(double dD0Tht, double dD1Tht, double dKtht1, double dKtht2, double dS)
 {
-    double dA = 0.25*pow(dU, 2)*(pow(dD0Tht, 2) + 1)/(pow(M_PI, 2)*pow(dNp, 2));
-    double dB = 0.5*dD0Tht*pow(dD1Tht, 2)*pow(dU, 2)/(pow(M_PI, 2)*pow(dNp, 2));
-    double dC = (0.25*pow(dD0Tht, 2)*pow(dD1Tht, 4)*pow(dU, 2) + 1.0*pow(dD1Tht, 4)*pow(dU, 2) - 1.0*pow(M_PI, 2)*pow(dNp, 2)*pow(dS, 2))/(pow(M_PI, 2)*pow(dNp, 2));
+    // double dA = 0.25*pow(dU, 2)*(pow(dD0Tht, 2) + 1)/(pow(M_PI, 2)*pow(dNp, 2));
+    // double dB = 0.5*dD0Tht*pow(dD1Tht, 2)*pow(dU, 2)/(pow(M_PI, 2)*pow(dNp, 2));
+    // double dC = (0.25*pow(dD0Tht, 2)*pow(dD1Tht, 4)*pow(dU, 2) + 1.0*pow(dD1Tht, 4)*pow(dU, 2) - 1.0*pow(M_PI, 2)*pow(dNp, 2)*pow(dS, 2))/(pow(M_PI, 2)*pow(dNp, 2));
+    double dA = pow(dD0Tht, 4)*pow(dKtht2, 2) + 2*pow(dD0Tht, 3)*dKtht1*dKtht2 + pow(dD0Tht, 2)*pow(dKtht1, 2) + 4*pow(dD0Tht, 2)*pow(dKtht2, 2) + 4*dD0Tht*dKtht1*dKtht2 + pow(dKtht1, 2);
+    double dB = 2*pow(dD1Tht, 2)*(2*pow(dD0Tht, 3)*pow(dKtht2, 2) + 3*pow(dD0Tht, 2)*dKtht1*dKtht2 + dD0Tht*pow(dKtht1, 2) + 4*dD0Tht*pow(dKtht2, 2) + 2*dKtht1*dKtht2);
+    double dC = pow(dD0Tht, 4)*pow(dD1Tht, 4)*pow(dKtht2, 2) + 2*pow(dD0Tht, 3)*pow(dD1Tht, 4)*dKtht1*dKtht2 + pow(dD0Tht, 2)*pow(dD1Tht, 4)*pow(dKtht1, 2) + 12*pow(dD0Tht, 2)*pow(dD1Tht, 4)*pow(dKtht2, 2) + 12*dD0Tht*pow(dD1Tht, 4)*dKtht1*dKtht2 + 4*pow(dD1Tht, 4)*pow(dKtht1, 2) + 4*pow(dD1Tht, 4)*pow(dKtht2, 2) - pow(dS, 2);
 
     return SovQuadEq(dA, dB, dC);
 }

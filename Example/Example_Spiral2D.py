@@ -6,24 +6,31 @@ import mrtrjgen
 
 sr = 100 # desired slew rate
 fov = 0.25
-numPix = 128
-u = 8
-dt = 10e-6
+nPix = 256
+u = 24
+dt = 2.5e-6
 gamma = 42.5756e6 # UIH
 
 # calculate trajectory
 lstArrKxy = []
 lstArrGxy = []
 lstArrSR = []
-scale = 1/gamma*numPix/fov
+scale = 1/gamma*nPix/fov
 for idxTht in range(u):
-    arrKxy, arrGxy = mrtrjgen.genSpiral2D(numPix, u, 2*pi*idxTht/u, 0.5, sr*gamma*fov/numPix, dt, 1e2)
+    arrKxy, arrGxy = mrtrjgen.genSpiral2D(0.5/(2*pi)/8, 1e-3, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dt, 1e2)
     arrSR = (arrGxy[1:,:] - arrGxy[:-1,:])/dt
     lstArrKxy.append(arrKxy)
     lstArrGxy.append(arrGxy*scale)
     lstArrSR.append(asarray(sqrt((arrSR**2).sum(axis=-1)))*scale)
     
 # plot
+fig = figure()
+ax = fig.add_subplot(111)
+for idxTR in range(u):
+    ax.plot(lstArrKxy[idxTR][:,0], lstArrKxy[idxTR][:,1], ".-")
+ax.axis("equal")
+draw()
+
 markersize = 2
 linewidth = 1
 fig = figure(figsize=(12,6), dpi=150)

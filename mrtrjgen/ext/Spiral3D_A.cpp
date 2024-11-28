@@ -18,21 +18,8 @@ double Spiral3D_A::SovD1Phi(double dD0Phi, double dNp, double dUTht, double dUPh
     return sqrt(fabs(SovQuadEq(dA, dB, dC)));
 }
 
-void Spiral3D_A::Update(std::vector<double> *pvdPara)
+void Spiral3D_A::Update(double dNp, double dUTht, double dUPhi, double dTht0, double dPhi0, double dKmax, double dS, double dDt)
 {
-    double dNp, dUTht, dUPhi, dTht0, dPhi0, dKmax, dS, dDt;
-    std::list<double*> ldParaDst(0);
-    ldParaDst.push_back(&dNp);
-    ldParaDst.push_back(&dUTht);
-    ldParaDst.push_back(&dUPhi);
-    ldParaDst.push_back(&dTht0);
-    ldParaDst.push_back(&dPhi0);
-    ldParaDst.push_back(&dKmax);
-    ldParaDst.push_back(&dS);
-    ldParaDst.push_back(&dDt);
-    std::vector<double*> vdParaDst(ldParaDst.begin(), ldParaDst.end());
-    ExtractPara(pvdPara, &vdParaDst);
-
     std::list<double> ldKx, ldKy, ldKz;
 #define PUSHBACK_KXYZ() \
     {\

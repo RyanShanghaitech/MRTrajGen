@@ -8,22 +8,13 @@
 PyObject *GenSpiral2D(PyObject* self, PyObject* args)
 {
     bool bRet;
-    double dNp, dU, dTht0, dKmax, dS, dDt, dOv;
-    bRet = PyArg_ParseTuple(args, "ddddddd", &dNp, &dU, &dTht0, &dKmax, &dS, &dDt, &dOv);
+    double dKtht1, dKtht2, dTht0, dKmax, dS, dDt, dOv;
+    bRet = PyArg_ParseTuple(args, "ddddddd", &dKtht1, &dKtht2, &dTht0, &dKmax, &dS, &dDt, &dOv);
     if (!bRet) {PyErr_SetString(PyExc_ValueError, "arg parse failed."); return NULL;}
 
     // construct and update trajectory object
     Spiral2D spiral;
-    std::list<double> ldPara(0);
-    ldPara.push_back(dNp);
-    ldPara.push_back(dU);
-    ldPara.push_back(dTht0);
-    ldPara.push_back(dKmax);
-    ldPara.push_back(dS);
-    ldPara.push_back(dDt);
-    ldPara.push_back(dOv);
-    std::vector<double> vdPara(ldPara.begin(), ldPara.end());
-    spiral.Update(&vdPara);
+    spiral.Update(dKtht1, dKtht2, dTht0, dKmax, dS, dDt, dOv);
 
     // copy value from spiral object
     std::vector<double> vdKx, vdKy;
@@ -74,17 +65,7 @@ PyObject *GenSpiral3D_A(PyObject* self, PyObject* args)
 
     // construct and update trajectory object
     Spiral3D_A spiral;
-    std::list<double> ldPara;
-    ldPara.push_back(dNp);
-    ldPara.push_back(dUTht);
-    ldPara.push_back(dUPhi);
-    ldPara.push_back(dTht0);
-    ldPara.push_back(dPhi0);
-    ldPara.push_back(dKmax);
-    ldPara.push_back(dS);
-    ldPara.push_back(dDt);
-    std::vector<double> vdPara(ldPara.begin(), ldPara.end());
-    spiral.Update(&vdPara);
+    spiral.Update(dNp, dUTht, dUPhi, dTht0, dPhi0, dKmax, dS, dDt);
 
     // copy value from spiral object
     std::vector<double> vdKx, vdKy, vdKz;
@@ -139,17 +120,7 @@ PyObject *GenSpiral3D_B(PyObject* self, PyObject* args)
 
     // construct and update trajectory object
     Spiral3D_B spiral;
-    std::list<double> ldPara;
-    ldPara.push_back(dNp);
-    ldPara.push_back(dUTht);
-    ldPara.push_back(dUPhi);
-    ldPara.push_back(dTht0);
-    ldPara.push_back(dPhi0);
-    ldPara.push_back(dKmax);
-    ldPara.push_back(dS);
-    ldPara.push_back(dDt);
-    std::vector<double> vdPara(ldPara.begin(), ldPara.end());
-    spiral.Update(&vdPara);
+    spiral.Update(dNp, dUTht, dUPhi, dTht0, dPhi0, dKmax, dS, dDt);
 
     // copy value from spiral object
     std::vector<double> vdKx, vdKy, vdKz;

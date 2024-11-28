@@ -43,14 +43,14 @@ def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
         indexing="ij")
     return array([lstK.flatten() for lstK in tupLstK]).T
 
-def genSpiral2D(numPix:int|float, u:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> ndarray:
+def genSpiral2D(dKtht1:int|float, dKtht2:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> tuple[ndarray, ndarray]:
     """
     # description:
     generate Spiral3D-TypeA trajectory
 
     # parmaeter:
-    `numPix`: matrix size of acquired image
-    `u`: undersamp ratio
+    `dKtht1`: coefficient of tht^1
+    `dKtht2`: coefficient of tht^2
     `tht0`: initial phase of theata
     `kmax`: maximum of k, typically 0.5
     `sr`: desired slewrate
@@ -61,9 +61,9 @@ def genSpiral2D(numPix:int|float, u:int|float, tht0:int|float, kmax:int|float, s
     trajectory: [[kx0,ky0], [kx1,ky1], ..., [kxn,kyn]]
     gradient: [[gx0,gy0], [gx1,gy1], ..., [gxn,gyn]]
     """
-    return ext.GenSpiral2D(numPix, u, tht0, kmax, sr, dt, ov)
+    return ext.GenSpiral2D(dKtht1, dKtht2, tht0, kmax, sr, dt, ov)
 
-def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> ndarray:
+def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
     """
     # description:
     generate Spiral3D-TypeA trajectory
@@ -85,7 +85,7 @@ def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|
     """
     return ext.GenSpiral3D_A(numPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
 
-def genSpiral3DTypeB(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> ndarray:
+def genSpiral3DTypeB(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
     """
     # description:
     generate Spiral3D-TypeB trajectory

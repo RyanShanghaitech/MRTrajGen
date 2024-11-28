@@ -20,7 +20,6 @@ public:
     Trajectory();
     virtual ~Trajectory();
 	virtual Trajectory& operator=(Trajectory &o);
-    virtual void Update(std::vector<double> *pvdPara) {};
     void GetTraj(std::vector<double> *pvdKx, std::vector<double> *pvdKy, std::vector<double> *pvdKz, double dScale=1e0) const;
     void GetGrad(std::vector<float> *pvfGx, std::vector<float> *pvfGy, std::vector<float> *pvfGz, double dScale=1e0) const;
     int64_t GetNpt() const;

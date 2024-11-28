@@ -16,13 +16,16 @@ def save_ccode(s:sp.Equality):
         f.write("```\n")
 
 # symbols and functions
-Np = sp.Symbol(r"N_p")
-u = sp.Symbol(r"u") # undersamp ratio
+# Np = sp.Symbol(r"N_p")
+# u = sp.Symbol(r"u") # undersamp ratio
+kTht1 = sp.Symbol(r"k_{\theta 1}")
+kTht2 = sp.Symbol(r"k_{\theta 2}")
 tht0 = sp.Symbol(r"\theta_0")
 
 t = sp.Symbol(r't')
 tht = sp.Function(r'\theta')(t)
-rho = (0.5)/(2*sp.pi)*(u)/(Np/2)*tht
+# rho = (0.5)/(2*sp.pi)*(u)/(Np/2)*tht
+rho = kTht1*tht + kTht2*tht**2
 
 # definition of kx and ky
 kx = rho*sp.cos(tht + tht0)
@@ -38,16 +41,14 @@ open(filename, "w").close()
 
 # save latex code
 dictRep = {
-    tht.diff(t,0): sp.Symbol(r'\textcolor{cyan}{\theta_t^{(0)}}'),
-    tht.diff(t,1): sp.Symbol(r'\textcolor{cyan}{\theta_t^{(1)}}'),
     tht.diff(t,2): sp.Symbol(r'\textcolor{cyan}{\theta_t^{(2)}}'),
 }
 save_latex(sp.Eq(sp.Symbol("s")**2, s2.subs(dictRep)))
 
 # save c code
 dictRep = {
-    Np: sp.Symbol(r'dNp'),
-    u: sp.Symbol(r'dU'),
+    kTht1: sp.Symbol(r'dKtht1'),
+    kTht2: sp.Symbol(r'dKtht2'),
     tht.diff(t,0): sp.Symbol(r'dD0Tht'),
     tht.diff(t,1): sp.Symbol(r'dD1Tht'),
     tht.diff(t,2): sp.Symbol(r'dD2Tht'),
