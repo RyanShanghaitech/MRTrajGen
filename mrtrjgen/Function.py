@@ -1,28 +1,25 @@
 from numpy import *
-from typing import Callable
-from .Utility import tranGrad2Traj_MinSR
 from . import ext
-import math
 
-def genRadial(lstTht:ndarray, lstRho:ndarray) -> ndarray:
+def genRadial(arrTht:ndarray, arrRho:ndarray) -> ndarray:
     """
     # description:
     generate radial sampling trajectory
 
     # parameter:
-    `lstTht`: list of theta of spokes, in `rad`
-    `lstRho`: list of rho of spokes, in `/pix`
+    `arrTht`: list of theta of spokes, in `rad`
+    `arrRho`: list of rho of spokes, in `/pix`
 
     # return:
     kspace trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]], in `/pix`
     """
     # shape check
-    assert(size(lstTht.shape) == 1)
-    assert(size(lstRho.shape) == 1)
+    assert(size(arrTht.shape) == 1)
+    assert(size(arrRho.shape) == 1)
     
     # generate kspace trajectory
-    lstKx = [lstRho*cos(lstTht[idxTht]) for idxTht in range(lstTht.size)]
-    lstKy = [lstRho*sin(lstTht[idxTht]) for idxTht in range(lstTht.size)]
+    lstKx = [arrRho*cos(arrTht[idxTht]) for idxTht in range(arrTht.size)]
+    lstKy = [arrRho*sin(arrTht[idxTht]) for idxTht in range(arrTht.size)]
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
@@ -63,13 +60,13 @@ def genSpiral2D(dKtht1:int|float, dKtht2:int|float, tht0:int|float, kmax:int|flo
     """
     return ext.GenSpiral2D(dKtht1, dKtht2, tht0, kmax, sr, dt, ov)
 
-def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
+def genSpiral3DTypeA(nPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
     """
     # description:
     generate Spiral3D-TypeA trajectory
 
     # parmaeter:
-    `numPix`: matrix size of acquired image
+    `nPix`: matrix size of acquired image
     `uTht`: undersamp ratio of theta
     `uPhi`: undersamp ratio of phi
     `tht0`: initial phase of theata
@@ -83,15 +80,15 @@ def genSpiral3DTypeA(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|
     trajectory: [[kx0,ky0,kz0], [kx1,ky1,kz1], ..., [kxn,kyn,kzn]]
     gradient: [[gx0,gy0,gz0], [gx1,gy1,gz1], ..., [gxn,gyn,gzn]]
     """
-    return ext.GenSpiral3D_A(numPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
+    return ext.GenSpiral3D_A(nPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
 
-def genSpiral3DTypeB(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
+def genSpiral3DTypeB(nPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
     """
     # description:
     generate Spiral3D-TypeB trajectory
 
     # parmaeter:
-    `numPix`: matrix size of acquired image
+    `nPix`: matrix size of acquired image
     `uTht`: undersamp ratio of theta
     `uPhi`: undersamp ratio of phi
     `tht0`: initial phase of theata
@@ -105,4 +102,4 @@ def genSpiral3DTypeB(numPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|
     trajectory: [[kx0,ky0,kz0], [kx1,ky1,kz1], ..., [kxn,kyn,kzn]]
     gradient: [[gx0,gy0,gz0], [gx1,gy1,gz1], ..., [gxn,gyn,gzn]]
     """
-    return ext.GenSpiral3D_B(numPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)
+    return ext.GenSpiral3D_B(nPix, uTht, uPhi, tht0, phi0, kmax, sr, dt)

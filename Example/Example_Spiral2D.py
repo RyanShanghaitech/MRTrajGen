@@ -8,7 +8,8 @@ sr = 100 # desired slew rate
 fov = 0.25
 nPix = 256
 u = 24
-dt = 2.5e-6
+dtGrad = 10e-6 # temporal resolution of gradient coil
+dtADC = 2.5e-6 # temporal resolution of ADC
 gamma = 42.5756e6 # UIH
 
 # calculate trajectory
@@ -17,8 +18,9 @@ lstArrGxy = []
 lstArrSR = []
 scale = 1/gamma*nPix/fov
 for idxTht in range(u):
-    arrKxy, arrGxy = mrtrjgen.genSpiral2D(0.5/(2*pi)/8, 1e-3, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dt, 1e2)
-    arrSR = (arrGxy[1:,:] - arrGxy[:-1,:])/dt
+    _, arrGxy = mrtrjgen.genSpiral2D(0.5/(2*pi)/8, 1e-3, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
+    arrKxy, _ = mrtrjgen.intpTraj(arrGxy, dtGrad, dtADC)
+    arrSR = (arrGxy[1:,:] - arrGxy[:-1,:])/dtGrad
     lstArrKxy.append(arrKxy)
     lstArrGxy.append(arrGxy*scale)
     lstArrSR.append(asarray(sqrt((arrSR**2).sum(axis=-1)))*scale)
@@ -54,8 +56,8 @@ while 1:
         axS.plot(lstArrSR[idxTR][:], ".-", markersize=markersize, linewidth=linewidth)
         axKxy.set_xlim([-0.5,0.5])
         axKxy.set_ylim([-0.5,0.5])
-        axGx.set_ylim([-30e-3,30e-3])
-        axGy.set_ylim([-30e-3,30e-3])
+        axGx.set_ylim([-50e-3,50e-3])
+        axGy.set_ylim([-50e-3,50e-3])
         axS.set_ylim([0,2*sr])
         axKxy.set_title("Kxy (/pix)")
         axGx.set_title("Gx (T/m)")

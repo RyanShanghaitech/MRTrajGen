@@ -178,33 +178,25 @@ def copyTraj(traj:ndarray, numCopy:int, intv:int|float=None):
         trjNew[idxCopy,:,1] = sin(intv*idxCopy)*traj[:,0] + cos(intv*idxCopy)*traj[:,1]
     return trjNew
 
-def intpTraj(arrGx:ndarray, arrGy:ndarray, arrGz:ndarray, dtGrad:int|float, dtADC:int|float) -> tuple[ndarray,ndarray]:
+def intpTraj(arrG:ndarray, dtGrad:int|float, dtADC:int|float) -> tuple[ndarray,ndarray]:
     """
     # description:
     interpolate gradient waveform and derive trajectory
 
     # parameter
-    `arrGx`, `arrGy`, `arrGz`: array of gradient waveform in x, y, z channel
-    `dtGrad`, `dtADC`: temporal resolution of gradient waveform and ADC
+    `arrG`: array of gradient waveform
+    `dtGrad`, `dtADC`: temporal resolution of gradient system and ADC
 
     # return:
     interpolated trajectory and gradient
     """
-    numGrad = arrGx.size
-    numADC = (dtGrad/dtADC)*(numGrad - 1)
-    arrGxResamp = interp(dtADC*arange(numADC) + dtADC/2, dtGrad*arange(numGrad), arrGx)
-    arrGyResamp = interp(dtADC*arange(numADC) + dtADC/2, dtGrad*arange(numGrad), arrGy)
-    arrGzResamp = interp(dtADC*arange(numADC) + dtADC/2, dtGrad*arange(numGrad), arrGz)
-    arrDkx = zeros_like(arrGxResamp)
-    arrDky = zeros_like(arrGyResamp)
-    arrDkz = zeros_like(arrGzResamp)
-    arrDkx[0] = (0 + arrGxResamp[0])*dtADC/2
-    arrDky[0] = (0 + arrGyResamp[0])*dtADC/2
-    arrDkz[0] = (0 + arrGzResamp[0])*dtADC/2
-    arrDkx[1:] = (arrGxResamp[:-1] + arrGxResamp[1:])*dtADC/2
-    arrDky[1:] = (arrGyResamp[:-1] + arrGyResamp[1:])*dtADC/2
-    arrDkz[1:] = (arrGzResamp[:-1] + arrGzResamp[1:])*dtADC/2
-    arrKx = cumsum(arrDkx)
-    arrKy = cumsum(arrDky)
-    arrKz = cumsum(arrDkz)
-    return array([arrKx,arrKy,arrKz]), array([arrGxResamp,arrGyResamp,arrGzResamp])
+    nGrad, nDim = arrG.shape
+    nADC = int(dtGrad/dtADC)*(nGrad - 1)
+    arrG_Resamp = zeros([nADC,nDim], dtype=float64)
+    for iDim in range(nDim):
+        arrG_Resamp[:,iDim] = interp(dtADC*arange(nADC) + dtADC/2, dtGrad*arange(nGrad), arrG[:,iDim])
+    arrDk = zeros_like(arrG_Resamp)
+    arrDk[0,:] = (0 + arrG_Resamp[0,:])*dtADC/2
+    arrDk[1:] = (arrG_Resamp[:-1] + arrG_Resamp[1:])*dtADC/2
+    arrK = cumsum(arrDk,axis=0)
+    return arrK, arrG_Resamp

@@ -13,7 +13,8 @@ fov = 0.25
 numPix = 128
 uTht = 32
 uPhi = 32
-dt = 10e-6
+dtGrad = 10e-6
+dtADC = 2.5e-6
 gamma = 42.5756e6 # UIH
 
 # calculate trajectory
@@ -23,8 +24,9 @@ lstArrSR = []
 scale = 1/gamma*numPix/fov
 for idxPhi in range(uPhi):
     for idxTht in range(uTht):
-        arrKxyz, arrGxyz = genSpiral3D(numPix, uTht, uPhi, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, 0.5, sr*gamma*fov/numPix, dt)
-        arrSR = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dt
+        _, arrGxyz = genSpiral3D(numPix, uTht, uPhi, 2*pi*idxTht/uTht, 2*pi*idxPhi/uPhi, 0.5, sr*gamma*fov/numPix, dtGrad)
+        arrKxyz, _ = mrtrjgen.intpTraj(arrGxyz, dtGrad, dtADC)
+        arrSR = (arrGxyz[1:,:] - arrGxyz[:-1,:])/dtGrad
         lstArrKxyz.append(arrKxyz)
         lstArrGxyz.append(arrGxyz*scale)
         lstArrSR.append(asarray(sqrt((arrSR**2).sum(axis=-1)))*scale)
