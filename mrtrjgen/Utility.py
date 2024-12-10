@@ -1,5 +1,6 @@
 from numpy import *
 from matplotlib.pyplot import *
+from scipy.signal import fftconvolve, convolve
 
 def tranTraj2Grad_Ideal(lstTraj:ndarray, dt:float|int) -> ndarray:
     """
@@ -200,3 +201,46 @@ def intpTraj(arrG:ndarray, dtGrad:int|float, dtADC:int|float) -> tuple[ndarray,n
     arrDk[1:] = (arrG_Resamp[:-1] + arrG_Resamp[1:])*dtADC/2
     arrK = cumsum(arrDk,axis=0)
     return arrK, arrG_Resamp
+
+def delayGrad(arrG:ndarray, tau:int|float) -> ndarray:
+    """
+    # description:
+    delay the input gradient waveform by time constant tau
+
+    # parameter
+    `arrG`: array of single gradient waveform
+    `tau`: time constant in RL circuit transfer function
+
+    # return:
+    delayed gradient waveform
+    """
+    assert arrG.ndim == 2, "only single gradient waveform is supported."
+    if tau == 0: return arrG.copy() # avoid divided-by-0 later
+    nPt, nAx = arrG.shape
+
+    # perform oversample to get better impluse response profile
+    ov = clip(10/tau, 1, 1e3).astype(int64) # the smaller the ov, the bigger oversampling is needed
+    arrG_ov = zeros([nPt*ov,nAx], dtype=arrG.dtype)
+    for iAx in range(nAx):
+        arrG_ov[:,iAx] = interp(linspace(0,nPt,nPt*ov,0), linspace(0,nPt,nPt,0), arrG[:,iAx]) # oversample
+    nPt *= ov
+    tau *= ov
+
+    # derive impluse response of RL circuit
+    arrG_ov = concatenate([arrG_ov, zeros_like(arrG_ov)], axis=0)
+    arrT = linspace(0,2*nPt,2*nPt,0) + 0.5
+    arrImpResRL = (1/tau)*exp(-arrT/tau)
+    if abs(arrImpResRL.sum() - 1) > 1e-2: raise ValueError(f"arrImpResRL.sum() = {arrImpResRL.sum():.2f} (supposed to be 1) (tau too small or too large)")
+    
+    # perform convolution between input waveform and impulse response
+    for iAx in range(nAx):
+        # arrG_ov[:,iAx] = fftconvolve(arrG_ov[:,iAx], arrImpResRL, mode="same")
+        arrG_ov[:,iAx] = fft.ifft(fft.fft(arrG_ov[:,iAx])*fft.fft(arrImpResRL)).real
+
+    # compensate the aliased signal produced by exp(-t/tau)
+    arrG_ov = arrG_ov[:nPt,:] - arrG_ov[nPt:,:]*(arrG_ov[0,:]-arrG[0,:])/(arrG_ov[nPt,:])
+
+    # de-oversample
+    arrG = arrG_ov[::ov]
+
+    return arrG

@@ -1,2 +1,2 @@
 from .Function import genRadial, genCart, genSpiral2D, genSpiral3DTypeA, genSpiral3DTypeB
-from .Utility import tranTraj2Grad_Ideal, tranTraj2Grad_MinSR, tranTraj2Grad_MaxSR, tranGrad2Traj_MinSR, tranGrad2Slewrate, getSlewRate_Circle, copyTraj, intpTraj
+from .Utility import tranTraj2Grad_Ideal, tranTraj2Grad_MinSR, tranTraj2Grad_MaxSR, tranGrad2Traj_MinSR, tranGrad2Slewrate, getSlewRate_Circle, copyTraj, intpTraj, delayGrad
