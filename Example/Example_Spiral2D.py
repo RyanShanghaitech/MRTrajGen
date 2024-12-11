@@ -18,7 +18,7 @@ lstArrG = []
 lstArrSR = []
 scale = 1/gamma*nPix/fov
 for idxTht in range(u):
-    _, arrG = mrtrjgen.genSpiral2D(0.5/(2*pi)/8, 1e-3, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
+    _, arrG = mrtrjgen.genSpiral2D(nPix, u, 8, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
     arrK, _ = mrtrjgen.intpTraj(arrG, dtGrad, dtADC)
     arrSR = (arrG[1:,:] - arrG[:-1,:])/dtGrad
     lstArrK.append(arrK)

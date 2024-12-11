@@ -9,7 +9,7 @@ gamma = 42.58e6
 fov = 0.5
 nPix = 256
 
-_, arrG = mrtrjgen.genSpiral2D(0.5/(2*pi)/8, 1e-3, 0, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
+_, arrG = mrtrjgen.genSpiral2D(nPix, 8, 1, 0, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
 nPt, _ = arrG.shape
 arrG_Delay = mrtrjgen.delayGrad(arrG, 1/4)
 

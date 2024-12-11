@@ -4,7 +4,7 @@ from . import ext
 def genRadial(arrTht:ndarray, arrRho:ndarray) -> ndarray:
     """
     # description:
-    generate radial sampling trajectory
+    generate Radial sampling trajectory
 
     # parameter:
     `arrTht`: list of theta of spokes, in `rad`
@@ -23,31 +23,32 @@ def genRadial(arrTht:ndarray, arrRho:ndarray) -> ndarray:
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
-def genCart(numPt:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
+def genCart(nPix:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
     """
     # description:
     generate Cartesian sampling trajectory
 
     # parameter:
-    `numPt`: number of point in one dimension
+    `nPix`: number of point in one dimension
     `max`: maximum coordinate value
 
     # return:
     trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]]
     """
     tupLstK = meshgrid(
-        *[linspace(-max, max, numPt, endpoint=False) for _ in range(numDim)],
+        *[linspace(-max, max, nPix, endpoint=False) for _ in range(numDim)],
         indexing="ij")
     return array([lstK.flatten() for lstK in tupLstK]).T
 
-def genSpiral2D(dKtht1:int|float, dKtht2:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> tuple[ndarray, ndarray]:
+def genSpiral2D(nPix:int|float, nSp:int|float, ovVds:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> tuple[ndarray, ndarray]:
     """
     # description:
-    generate Spiral3D-TypeA trajectory
+    generate Spiral2D trajectory
 
     # parmaeter:
-    `dKtht1`: coefficient of tht^1
-    `dKtht2`: coefficient of tht^2
+    `nPix`: number of pixel
+    `nSp`: number of spiral
+    `ovVds`: oversampling factor of Variable Density Spiral, 1 for Constant Density Spiral
     `tht0`: initial phase of theata
     `kmax`: maximum of k, typically 0.5
     `sr`: desired slewrate
@@ -58,6 +59,9 @@ def genSpiral2D(dKtht1:int|float, dKtht2:int|float, tht0:int|float, kmax:int|flo
     trajectory: [[kx0,ky0], [kx1,ky1], ..., [kxn,kyn]]
     gradient: [[gx0,gy0], [gx1,gy1], ..., [gxn,gyn]]
     """
+    thtMax = (2*pi)*(nPix/2)/nSp
+    dKtht1 = (kmax/thtMax)/ovVds
+    dKtht2 = ((nSp/(2*pi*nPix))**2 - dKtht1**2)/2
     return ext.GenSpiral2D(dKtht1, dKtht2, tht0, kmax, sr, dt, ov)
 
 def genSpiral3DTypeA(nPix:int|float, uTht:int|float, uPhi:int|float, tht0:int|float, phi0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1) -> tuple[ndarray, ndarray]:
