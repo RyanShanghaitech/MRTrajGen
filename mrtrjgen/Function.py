@@ -23,7 +23,7 @@ def genRadial(arrTht:ndarray, arrRho:ndarray) -> ndarray:
 
     return array([lstKx, lstKy]).transpose([1,2,0])
 
-def genCart(nPix:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
+def genCart(nPix:int|float, max:int|float|None=None, numDim:int=2) -> ndarray:
     """
     # description:
     generate Cartesian sampling trajectory
@@ -35,10 +35,11 @@ def genCart(nPix:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
     # return:
     trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]]
     """
-    tupArrCoor = meshgrid(
+    if max == None: max = nPix//2
+    tupLstK = meshgrid(
         *[linspace(-max, max, nPix, endpoint=False) for _ in range(numDim)],
         indexing="ij")[::-1]
-    return array([arrCoor.flatten() for arrCoor in tupArrCoor]).T
+    return array([lstK for lstK in tupLstK]).transpose(1,2,0)
 
 def genSpiral2D(nPix:int|float, nSp:int|float, ovVds:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> tuple[ndarray, ndarray]:
     """
