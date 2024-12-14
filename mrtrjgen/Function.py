@@ -35,10 +35,10 @@ def genCart(nPix:int|float, max:int|float=0.5, numDim:int=2) -> ndarray:
     # return:
     trajectory: [[kx1,ky1], [kx2,ky2], ..., [kxn,kyn]]
     """
-    tupLstK = meshgrid(
+    tupArrCoor = meshgrid(
         *[linspace(-max, max, nPix, endpoint=False) for _ in range(numDim)],
-        indexing="ij")
-    return array([lstK.flatten() for lstK in tupLstK]).T
+        indexing="ij")[::-1]
+    return array([arrCoor.flatten() for arrCoor in tupArrCoor]).T
 
 def genSpiral2D(nPix:int|float, nSp:int|float, ovVds:int|float, tht0:int|float, kmax:int|float, sr:int|float, dt:int|float=10e-6, ov:int|float=1e2) -> tuple[ndarray, ndarray]:
     """
