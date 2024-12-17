@@ -7,7 +7,7 @@ import mrtrjgen
 sr = 100 # desired slew rate
 fov = 0.25
 nPix = 256
-u = 24
+nSp = 24
 dtGrad = 10e-6 # temporal resolution of gradient coil
 dtADC = 2.5e-6 # temporal resolution of ADC
 gamma = 42.5756e6 # UIH
@@ -17,8 +17,8 @@ lstArrK = []
 lstArrG = []
 lstArrSR = []
 scale = 1/gamma*nPix/fov
-for idxTht in range(u):
-    _, arrG = mrtrjgen.genSpiral2D(nPix, u, 8, 2*pi*idxTht/u, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
+for iTht in range(nSp):
+    _, arrG = mrtrjgen.genSpiral2D(nPix, nSp, 8, 2*pi*iTht/nSp, 0.5, sr*gamma*fov/nPix, dtGrad, 1e2)
     arrK, _ = mrtrjgen.intpTraj(arrG, dtGrad, dtADC)
     arrSR = (arrG[1:,:] - arrG[:-1,:])/dtGrad
     lstArrK.append(arrK)
@@ -28,7 +28,7 @@ for idxTht in range(u):
 # plot
 fig = figure()
 ax = fig.add_subplot(111)
-for idxTR in range(u):
+for idxTR in range(nSp):
     ax.plot(lstArrK[idxTR][:,0], lstArrK[idxTR][:,1], ".-")
 ax.axis("equal")
 draw()
@@ -45,7 +45,7 @@ axSR = fig.add_subplot(gs[2:3,3:6])
 subplots_adjust(left=0.0, right=0.9, top=0.9, bottom=0.1, hspace=0.4, wspace=0.4)
 
 while 1:
-    for idxTR in range(u):
+    for idxTR in range(nSp):
         axK.clear()
         axGx.clear()
         axGy.clear()
